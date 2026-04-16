@@ -14,11 +14,13 @@ interface TimeLeft {
 interface CountdownTimerProps {
   targetDate: Date
   eventName: string
+  onEventStart?: () => void
 }
 
-export function CountdownTimer({ targetDate, eventName }: CountdownTimerProps) {
+export function CountdownTimer({ targetDate, eventName, onEventStart }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [isClient, setIsClient] = useState(false)
+  const [isEventStarted, setIsEventStarted] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
@@ -26,31 +28,36 @@ export function CountdownTimer({ targetDate, eventName }: CountdownTimerProps) {
     const calculateTimeLeft = () => {
       const difference = targetDate.getTime() - new Date().getTime()
 
-      if (difference > 0) {
-        return {
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
+      if (difference <= 0) {
+        if (!isEventStarted) {
+          setIsEventStarted(true)
+          onEventStart?.()
         }
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 }
       }
 
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      }
     }
 
-    setTimeLeft(calculateTimeLeft())
+    const initial = calculateTimeLeft()
+    setTimeLeft(initial)
 
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft())
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [targetDate])
+  }, [targetDate, onEventStart, isEventStarted])
 
   const TimeBlock = ({ value, label }: { value: number; label: string }) => (
     <div className="flex flex-col items-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md">
-        <span className="text-2xl font-bold">{String(value).padStart(2, "0")}</span>
+      <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md">
+        <span className="text-xl sm:text-2xl font-bold">{String(value).padStart(2, "0")}</span>
       </div>
       <span className="mt-2 text-xs font-medium text-muted-foreground">{label}</span>
     </div>
@@ -69,6 +76,10 @@ export function CountdownTimer({ targetDate, eventName }: CountdownTimerProps) {
     )
   }
 
+  if (isEventStarted) {
+    return null
+  }
+
   return (
     <Card className="mx-4 overflow-hidden rounded-3xl border-2 border-primary/20 bg-card/80 backdrop-blur-sm">
       <CardContent className="p-6">
@@ -77,21 +88,21 @@ export function CountdownTimer({ targetDate, eventName }: CountdownTimerProps) {
           <span className="font-semibold">{eventName}</span>
         </div>
         
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
           <TimeBlock value={timeLeft.days} label="일" />
           <div className="flex flex-col gap-2 pb-6">
-            <div className="h-2 w-2 rounded-full bg-primary/60" />
-            <div className="h-2 w-2 rounded-full bg-primary/60" />
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
           </div>
           <TimeBlock value={timeLeft.hours} label="시간" />
           <div className="flex flex-col gap-2 pb-6">
-            <div className="h-2 w-2 rounded-full bg-primary/60" />
-            <div className="h-2 w-2 rounded-full bg-primary/60" />
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
           </div>
           <TimeBlock value={timeLeft.minutes} label="분" />
           <div className="flex flex-col gap-2 pb-6">
-            <div className="h-2 w-2 rounded-full bg-primary/60" />
-            <div className="h-2 w-2 rounded-full bg-primary/60" />
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
           </div>
           <TimeBlock value={timeLeft.seconds} label="초" />
         </div>

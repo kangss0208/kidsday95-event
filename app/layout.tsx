@@ -16,8 +16,8 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: '햇살 어린이집 - 특별한 이벤트',
-  description: '우리 아이들의 꿈이 자라는 곳, 햇살 어린이집에서 특별한 이벤트에 초대합니다!',
+  title: 'CARAT 9559 - 특별한 어린이 이벤트',
+  description: 'CARAT 9559와 함께하는 특별한 어린이 이벤트에 초대합니다!',
   generator: 'v0.app',
   icons: {
     icon: [

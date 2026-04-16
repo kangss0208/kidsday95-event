@@ -1,108 +1,188 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { IntroScreen } from "@/components/intro-screen"
-import { Header } from "@/components/header"
+import { useState, useEffect, useCallback } from "react"
+import { SplashScreen } from "@/components/splash-screen"
 import { CountdownTimer } from "@/components/countdown-timer"
-import { NoticeBoard } from "@/components/notice-board"
-import { ActivityCards } from "@/components/activity-cards"
-import { BottomNavigation } from "@/components/bottom-navigation"
-import { Baby, Heart, Flower2 } from "lucide-react"
+import { TeacherIntro } from "@/components/teacher-intro"
+import { LoginScreen } from "@/components/login-screen"
+import { ChildDashboard } from "@/components/child-dashboard"
+import { TeacherDashboard } from "@/components/teacher-dashboard"
+import { Button } from "@/components/ui/button"
+import { getCurrentChild, getIsTeacher } from "@/lib/store"
+import { Users, Sparkles } from "lucide-react"
+import type { Child } from "@/lib/types"
+
+// Event date - set to a future date for testing countdown
+// Change this to your actual event date
+const EVENT_DATE = new Date('2026-05-05T10:00:00')
+
+type AppScreen = 'splash' | 'pre-event' | 'login' | 'child-dashboard' | 'teacher-dashboard'
 
 export default function Home() {
-  const [showIntro, setShowIntro] = useState(true)
+  const [currentScreen, setCurrentScreen] = useState<AppScreen>('splash')
+  const [showTeacherIntro, setShowTeacherIntro] = useState(false)
+  const [currentChild, setCurrentChildState] = useState<Child | null>(null)
+  const [isTeacher, setIsTeacherState] = useState(false)
+  const [isEventStarted, setIsEventStarted] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
-  const handleIntroComplete = useCallback(() => {
-    setShowIntro(false)
+  // Check if event has started
+  useEffect(() => {
+    const checkEventStatus = () => {
+      const now = new Date()
+      if (now >= EVENT_DATE) {
+        setIsEventStarted(true)
+      }
+    }
+    checkEventStatus()
   }, [])
 
-  // 이벤트 날짜 설정 (예: 2026년 5월 5일 어린이날)
-  const eventDate = new Date("2026-05-05T10:00:00")
+  // Check existing session on mount
+  useEffect(() => {
+    const child = getCurrentChild()
+    const teacher = getIsTeacher()
 
-  return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* 인트로 화면 */}
-      {showIntro && <IntroScreen onComplete={handleIntroComplete} />}
+    if (child) {
+      setCurrentChildState(child)
+    } else if (teacher) {
+      setIsTeacherState(true)
+    }
+    setIsLoaded(true)
+  }, [])
 
-      {/* 메인 컨텐츠 */}
-      <div
-        className={`transition-opacity duration-500 ${
-          showIntro ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        <Header />
+  const handleSplashComplete = useCallback(() => {
+    const child = getCurrentChild()
+    const teacher = getIsTeacher()
 
-        <main className="mx-auto max-w-md">
-          {/* 환영 배너 */}
-          <section className="relative mx-4 mt-4 overflow-hidden rounded-3xl bg-primary p-5">
-            <div className="relative z-10">
-              <div className="mb-2 flex items-center gap-2">
-                <Baby className="h-5 w-5 text-primary-foreground" />
-                <span className="text-sm font-semibold text-primary-foreground/80">
-                  2026 봄 현장학습
-                </span>
-              </div>
-              <h2 className="text-xl font-bold text-primary-foreground leading-relaxed">
-                우리 아이들과 함께하는
-                <br />
-                특별한 봄 나들이
-              </h2>
-              <p className="mt-2 text-sm text-primary-foreground/70">
-                동물원에서 만나는 신기한 동물 친구들!
-              </p>
+    if (child) {
+      setCurrentChildState(child)
+      setCurrentScreen('child-dashboard')
+    } else if (teacher) {
+      setIsTeacherState(true)
+      setCurrentScreen('teacher-dashboard')
+    } else if (isEventStarted) {
+      setCurrentScreen('login')
+    } else {
+      setCurrentScreen('pre-event')
+    }
+  }, [isEventStarted])
+
+  const handleEventStart = useCallback(() => {
+    setIsEventStarted(true)
+  }, [])
+
+  const handleLoginSuccess = (isTeacherLogin: boolean) => {
+    if (isTeacherLogin) {
+      setIsTeacherState(true)
+      setCurrentScreen('teacher-dashboard')
+    } else {
+      const child = getCurrentChild()
+      if (child) {
+        setCurrentChildState(child)
+        setCurrentScreen('child-dashboard')
+      }
+    }
+  }
+
+  const handleLogout = () => {
+    setCurrentChildState(null)
+    setIsTeacherState(false)
+    if (isEventStarted) {
+      setCurrentScreen('login')
+    } else {
+      setCurrentScreen('pre-event')
+    }
+  }
+
+  // Don't render until loaded to avoid hydration mismatch
+  if (!isLoaded) {
+    return null
+  }
+
+  // Splash screen
+  if (currentScreen === 'splash') {
+    return <SplashScreen onComplete={handleSplashComplete} />
+  }
+
+  // Pre-event screen with countdown
+  if (currentScreen === 'pre-event') {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-primary/10 via-background to-secondary/10">
+        {/* Teacher Intro Modal */}
+        {showTeacherIntro && (
+          <TeacherIntro onClose={() => setShowTeacherIntro(false)} />
+        )}
+
+        {/* Header */}
+        <div className="text-center pt-12 pb-8 px-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border-2 border-primary/20 mb-4">
+            <Sparkles className="w-4 h-4 text-secondary-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">특별한 어린이 이벤트</span>
+          </div>
+          <h1 className="text-4xl font-extrabold">
+            <span className="text-primary">CARAT</span>
+            <span className="text-foreground ml-2">9559</span>
+          </h1>
+          <p className="text-muted-foreground mt-2">곧 시작됩니다!</p>
+        </div>
+
+        {/* Countdown */}
+        <div className="flex-1 flex flex-col justify-center">
+          <CountdownTimer 
+            targetDate={EVENT_DATE} 
+            eventName="이벤트 시작까지"
+            onEventStart={handleEventStart}
+          />
+
+          {/* Enter button when event starts */}
+          {isEventStarted && (
+            <div className="mt-6 px-4">
+              <Button 
+                onClick={() => setCurrentScreen('login')}
+                className="w-full max-w-md mx-auto block h-14 rounded-2xl text-lg font-semibold"
+              >
+                입장하기
+              </Button>
             </div>
-            {/* 장식 요소 */}
-            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary-foreground/10" />
-            <div className="absolute -bottom-2 right-8 h-16 w-16 rounded-full bg-primary-foreground/10" />
-            <Flower2 className="absolute bottom-4 right-4 h-8 w-8 text-primary-foreground/30" />
-          </section>
+          )}
+        </div>
 
-          {/* 디데이 카운트다운 */}
-          <section className="mt-6">
-            <CountdownTimer targetDate={eventDate} eventName="어린이날 특별 행사" />
-          </section>
-
-          {/* 오늘의 활동 카드 */}
-          <section className="mt-6">
-            <ActivityCards />
-          </section>
-
-          {/* 공지사항 (원아 수첩) */}
-          <section className="mt-6">
-            <NoticeBoard />
-          </section>
-
-          {/* 원아 모집 배너 */}
-          <section className="mx-4 mt-6">
-            <div className="relative overflow-hidden rounded-3xl bg-secondary p-5">
-              <div className="relative z-10">
-                <div className="mb-2 flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-semibold text-foreground">
-                    신입 원아 모집
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-foreground">
-                  2026년 5월 신입 원아를
-                  <br />
-                  모집합니다!
-                </h3>
-                <button className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105 active:scale-95">
-                  자세히 보기
-                </button>
-              </div>
-              {/* 장식 요소 */}
-              <div className="absolute -right-6 -bottom-6 h-28 w-28 rounded-full bg-primary/10" />
-              <div className="absolute right-16 bottom-2 h-12 w-12 rounded-full bg-accent/30" />
-            </div>
-          </section>
-
-          {/* 하단 여백 */}
-          <div className="h-8" />
-        </main>
-
-        <BottomNavigation />
+        {/* Teacher Intro Button */}
+        <div className="p-4 pb-8">
+          <Button
+            variant="outline"
+            onClick={() => setShowTeacherIntro(true)}
+            className="w-full max-w-md mx-auto block h-12 rounded-2xl border-2"
+          >
+            <Users className="w-5 h-5 mr-2" />
+            선생님 소개
+          </Button>
+        </div>
       </div>
+    )
+  }
+
+  // Login screen
+  if (currentScreen === 'login') {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />
+  }
+
+  // Child dashboard
+  if (currentScreen === 'child-dashboard' && currentChild) {
+    return <ChildDashboard child={currentChild} onLogout={handleLogout} />
+  }
+
+  // Teacher dashboard
+  if (currentScreen === 'teacher-dashboard' && isTeacher) {
+    return <TeacherDashboard onLogout={handleLogout} />
+  }
+
+  // Fallback - should not happen
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Button onClick={() => setCurrentScreen('splash')}>
+        다시 시작
+      </Button>
     </div>
   )
 }
