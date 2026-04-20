@@ -11,7 +11,8 @@ import {
   Sparkles,
   User,
   Lock,
-  School
+  School,
+  Clock
 } from "lucide-react"
 import { 
   getChildren, 
@@ -29,9 +30,11 @@ type LoginMode = 'select' | 'child-login' | 'child-register' | 'teacher'
 interface LoginScreenProps {
   onLoginSuccess: (isTeacher: boolean) => void
   teacherOnly?: boolean
+  isEventStarted?: boolean
+  onBack?: () => void
 }
 
-export function LoginScreen({ onLoginSuccess, teacherOnly = false }: LoginScreenProps) {
+export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarted = true, onBack }: LoginScreenProps) {
   const [mode, setMode] = useState<LoginMode>(teacherOnly ? 'teacher' : 'select')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -112,6 +115,16 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false }: LoginScreen
   if (mode === 'select') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-primary/10 via-background to-secondary/10">
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>돌아가기</span>
+          </button>
+        )}
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             환영합니다!
@@ -120,21 +133,37 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false }: LoginScreen
         </div>
 
         <div className="w-full max-w-sm space-y-4">
-          <Card 
-            className="rounded-3xl border-2 border-primary/20 cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all"
-            onClick={() => { resetForm(); setMode('child-login') }}
-          >
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
-                <Baby className="w-8 h-8 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg text-foreground">어린이</h3>
-                <p className="text-sm text-muted-foreground">재미있는 미션을 하러 왔어요!</p>
-              </div>
-              <Sparkles className="w-5 h-5 text-secondary-foreground" />
-            </CardContent>
-          </Card>
+          {/* 어린이 카드 - 이벤트 전에는 기다려야해요 메시지 */}
+          {!isEventStarted ? (
+            <Card className="rounded-3xl border-2 border-primary/20 opacity-80">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
+                  <Clock className="w-8 h-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-foreground">어린이</h3>
+                  <p className="text-sm text-primary font-medium">조금만 기다려주세요!</p>
+                  <p className="text-xs text-muted-foreground mt-1">이벤트가 시작되면 입장할 수 있어요</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card 
+              className="rounded-3xl border-2 border-primary/20 cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all"
+              onClick={() => { resetForm(); setMode('child-login') }}
+            >
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
+                  <Baby className="w-8 h-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-foreground">어린이</h3>
+                  <p className="text-sm text-muted-foreground">재미있는 미션을 하러 왔어요!</p>
+                </div>
+                <Sparkles className="w-5 h-5 text-secondary-foreground" />
+              </CardContent>
+            </Card>
+          )}
 
           <Card 
             className="rounded-3xl border-2 border-secondary/30 cursor-pointer hover:border-secondary/50 hover:shadow-lg transition-all"
