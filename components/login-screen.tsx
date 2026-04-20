@@ -28,10 +28,11 @@ type LoginMode = 'select' | 'child-login' | 'child-register' | 'teacher'
 
 interface LoginScreenProps {
   onLoginSuccess: (isTeacher: boolean) => void
+  teacherOnly?: boolean
 }
 
-export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
-  const [mode, setMode] = useState<LoginMode>('select')
+export function LoginScreen({ onLoginSuccess, teacherOnly = false }: LoginScreenProps) {
+  const [mode, setMode] = useState<LoginMode>(teacherOnly ? 'teacher' : 'select')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [selectedClass, setSelectedClass] = useState('')

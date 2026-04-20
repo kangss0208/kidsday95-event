@@ -9,14 +9,13 @@ import { ChildDashboard } from "@/components/child-dashboard"
 import { TeacherDashboard } from "@/components/teacher-dashboard"
 import { Button } from "@/components/ui/button"
 import { getCurrentChild, getIsTeacher } from "@/lib/store"
-import { Users, Sparkles } from "lucide-react"
+import { Users, Sparkles, KeyRound } from "lucide-react"
 import type { Child } from "@/lib/types"
 
-// Event date - set to past date to see post-event screen
-// Change this to your actual event date when ready
-const EVENT_DATE = new Date('2026-04-01T10:00:00')
+// Event date - change this to your actual event date
+const EVENT_DATE = new Date('2026-05-05T10:00:00')
 
-type AppScreen = 'splash' | 'pre-event' | 'login' | 'child-dashboard' | 'teacher-dashboard'
+type AppScreen = 'splash' | 'pre-event' | 'login' | 'teacher-login' | 'child-dashboard' | 'teacher-dashboard'
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('splash')
@@ -147,15 +146,24 @@ export default function Home() {
           )}
         </div>
 
-        {/* Teacher Intro Button */}
-        <div className="p-4 pb-8">
+        {/* Bottom Buttons */}
+        <div className="p-4 pb-8 space-y-3 max-w-md mx-auto w-full">
           <Button
             variant="outline"
             onClick={() => setShowTeacherIntro(true)}
-            className="w-full max-w-md mx-auto block h-12 rounded-2xl border-2"
+            className="w-full h-12 rounded-2xl border-2"
           >
             <Users className="w-5 h-5 mr-2" />
             선생님 소개
+          </Button>
+          
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentScreen('teacher-login')}
+            className="w-full h-10 rounded-2xl text-muted-foreground hover:text-foreground"
+          >
+            <KeyRound className="w-4 h-4 mr-2" />
+            관리자 로그인
           </Button>
         </div>
       </div>
@@ -165,6 +173,11 @@ export default function Home() {
   // Login screen
   if (currentScreen === 'login') {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />
+  }
+
+  // Teacher-only login screen (before event)
+  if (currentScreen === 'teacher-login') {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} teacherOnly />
   }
 
   // Child dashboard
