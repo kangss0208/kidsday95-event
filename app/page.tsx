@@ -12,9 +12,9 @@ import { getCurrentChild, getIsTeacher } from "@/lib/store"
 import { Users, Sparkles } from "lucide-react"
 import type { Child } from "@/lib/types"
 
-// Event date - set to a future date for testing countdown
-// Change this to your actual event date
-const EVENT_DATE = new Date('2026-05-05T10:00:00')
+// Event date - set to past date to see post-event screen
+// Change this to your actual event date when ready
+const EVENT_DATE = new Date('2026-04-01T10:00:00')
 
 type AppScreen = 'splash' | 'pre-event' | 'login' | 'child-dashboard' | 'teacher-dashboard'
 
