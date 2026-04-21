@@ -13,7 +13,7 @@ import { Users, Sparkles } from "lucide-react"
 import type { Child } from "@/lib/types"
 
 // Default fallback — actual value is loaded from store on mount (see useEffect)
-const DEFAULT_EVENT_DATE = new Date('2026-04-21T10:00:00')
+const DEFAULT_EVENT_DATE = new Date('2026-04-20T10:00:00')
 
 type AppScreen = 'splash' | 'pre-event' | 'login' | 'teacher-login' | 'child-dashboard' | 'teacher-dashboard'
 
