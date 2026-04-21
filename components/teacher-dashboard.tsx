@@ -21,9 +21,10 @@ import {
   Backpack,
   Settings,
 } from "lucide-react"
-import type { Child, Mission } from "@/lib/types"
+import type { Child, ClassInfo, Mission } from "@/lib/types"
 import {
   getChildren,
+  getClasses,
   getMissions,
   saveMissions,
   toggleMissionForChild,
@@ -49,14 +50,17 @@ interface TeacherDashboardProps {
 export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('children')
   const [children, setChildren] = useState<Child[]>([])
+  const [classes, setClasses] = useState<ClassInfo[]>([])
   const [missions, setMissions] = useState<Mission[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedChild, setExpandedChild] = useState<string | null>(null)
   const [newMissionTitle, setNewMissionTitle] = useState('')
   const [newMissionDesc, setNewMissionDesc] = useState('')
+  const [newMissionClasses, setNewMissionClasses] = useState<string[]>([])
 
   useEffect(() => {
     setChildren(getChildren())
+    setClasses(getClasses())
     setMissions(getMissions())
   }, [])
 
@@ -71,7 +75,7 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
   }
 
   const handleAddMission = () => {
-    if (!newMissionTitle.trim()) return
+    if (!newMissionTitle.trim() || newMissionClasses.length === 0) return
 
     const newMission: Mission = {
       id: Date.now().toString(),
@@ -79,6 +83,7 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
       description: newMissionDesc.trim() || '미션을 완료해주세요!',
       completed: false,
       completedBy: [],
+      classNames: newMissionClasses,
     }
 
     const updated = [...missions, newMission]
@@ -86,7 +91,17 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
     setMissions(updated)
     setNewMissionTitle('')
     setNewMissionDesc('')
+    setNewMissionClasses([])
   }
+
+  const toggleNewMissionClass = (name: string) => {
+    setNewMissionClasses((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    )
+  }
+
+  const missionsForChild = (child: Child) =>
+    missions.filter((m) => m.classNames.includes(child.className))
 
   const handleDeleteMission = (missionId: string) => {
     const updated = missions.filter(m => m.id !== missionId)
@@ -99,9 +114,10 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
     child.className.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const getChildMissionProgress = (childId: string) => {
-    const completed = missions.filter(m => m.completedBy.includes(childId)).length
-    return { completed, total: missions.length }
+  const getChildMissionProgress = (child: Child) => {
+    const applicable = missionsForChild(child)
+    const completed = applicable.filter((m) => m.completedBy.includes(child.id)).length
+    return { completed, total: applicable.length }
   }
 
   const tabs: { key: Tab; label: string; Icon: typeof Users }[] = [
@@ -186,7 +202,8 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
             ) : (
               <div className="space-y-3">
                 {filteredChildren.map((child) => {
-                  const progress = getChildMissionProgress(child.id)
+                  const progress = getChildMissionProgress(child)
+                  const childMissions = missionsForChild(child)
                   const isExpanded = expandedChild === child.id
 
                   return (
@@ -225,27 +242,35 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                         {isExpanded && (
                           <div className="px-4 pb-4 border-t border-border pt-4 space-y-2">
                             <p className="text-sm font-medium text-muted-foreground mb-2">미션 현황</p>
-                            {missions.map((mission) => {
-                              const isCompleted = mission.completedBy.includes(child.id)
-                              return (
-                                <button
-                                  key={mission.id}
-                                  onClick={() => handleToggleMissionForChild(mission.id, child.id)}
-                                  className={`w-full flex items-center gap-2 p-2 rounded-xl transition-colors ${
-                                    isCompleted ? 'bg-primary/10' : 'bg-muted/50 hover:bg-muted'
-                                  }`}
-                                >
-                                  {isCompleted ? (
-                                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                                  ) : (
-                                    <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                                  )}
-                                  <span className={`text-sm ${isCompleted ? 'text-primary' : 'text-foreground'}`}>
-                                    {mission.title}
-                                  </span>
-                                </button>
-                              )
-                            })}
+                            {childMissions.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">
+                                {child.className
+                                  ? `${child.className}에 등록된 미션이 없어요`
+                                  : '반 배정 후 해당 반 미션이 표시돼요'}
+                              </p>
+                            ) : (
+                              childMissions.map((mission) => {
+                                const isCompleted = mission.completedBy.includes(child.id)
+                                return (
+                                  <button
+                                    key={mission.id}
+                                    onClick={() => handleToggleMissionForChild(mission.id, child.id)}
+                                    className={`w-full flex items-center gap-2 p-2 rounded-xl transition-colors ${
+                                      isCompleted ? 'bg-primary/10' : 'bg-muted/50 hover:bg-muted'
+                                    }`}
+                                  >
+                                    {isCompleted ? (
+                                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                                    ) : (
+                                      <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                                    )}
+                                    <span className={`text-sm ${isCompleted ? 'text-primary' : 'text-foreground'}`}>
+                                      {mission.title}
+                                    </span>
+                                  </button>
+                                )
+                              })
+                            )}
                           </div>
                         )}
                       </CardContent>
@@ -280,9 +305,31 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                   onChange={(e) => setNewMissionDesc(e.target.value)}
                   className="rounded-xl"
                 />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">적용 반 (하나 이상 선택)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {classes.map((cls) => {
+                      const selected = newMissionClasses.includes(cls.name)
+                      return (
+                        <button
+                          key={cls.name}
+                          type="button"
+                          onClick={() => toggleNewMissionClass(cls.name)}
+                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-colors ${
+                            selected
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border text-muted-foreground hover:border-primary/40'
+                          }`}
+                        >
+                          {cls.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
                 <Button
                   onClick={handleAddMission}
-                  disabled={!newMissionTitle.trim()}
+                  disabled={!newMissionTitle.trim() || newMissionClasses.length === 0}
                   className="w-full rounded-xl"
                 >
                   미션 추가하기
@@ -292,6 +339,17 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
 
             {/* Mission List */}
             <div className="space-y-3">
+              {missions.length === 0 && (
+                <Card className="rounded-3xl border-2 border-dashed border-border">
+                  <CardContent className="p-8 text-center">
+                    <ListTodo className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">아직 등록된 미션이 없어요</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      위 폼에서 반을 골라 미션을 추가해주세요
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
               {missions.map((mission) => {
                 const completedCount = mission.completedBy.length
                 return (
@@ -301,6 +359,16 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                         <div className="flex-1">
                           <h3 className="font-semibold text-foreground">{mission.title}</h3>
                           <p className="text-sm text-muted-foreground mt-1">{mission.description}</p>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {mission.classNames.map((name) => (
+                              <span
+                                key={name}
+                                className="px-2 py-0.5 rounded-full bg-secondary/30 text-xs text-secondary-foreground"
+                              >
+                                {name}
+                              </span>
+                            ))}
+                          </div>
                           <p className="text-xs text-primary mt-2">
                             {completedCount}명 완료
                           </p>

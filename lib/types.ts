@@ -13,6 +13,7 @@ export interface Mission {
   description: string;
   completed: boolean;
   completedBy: string[];
+  classNames: string[];
 }
 
 export interface ClassInfo {

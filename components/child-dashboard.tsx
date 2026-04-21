@@ -45,7 +45,8 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
 
   const myClass = classes.find(c => c.name === child.className)
   const isUnassigned = !child.className
-  const completedMissions = missions.filter(m => m.completedBy.includes(child.id)).length
+  const myMissions = missions.filter(m => m.classNames.includes(child.className))
+  const completedMissions = myMissions.filter(m => m.completedBy.includes(child.id)).length
 
   const handleLogout = () => {
     logout()
@@ -130,7 +131,7 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                   <ListTodo className="w-5 h-5 text-secondary-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">완료한 미션</p>
-                    <p className="font-semibold text-foreground">{completedMissions} / {missions.length}</p>
+                    <p className="font-semibold text-foreground">{completedMissions} / {myMissions.length}</p>
                   </div>
                 </div>
               </CardContent>
@@ -144,13 +145,13 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                   <h3 className="font-bold text-foreground">미션 진행률</h3>
                 </div>
                 <div className="w-full h-4 bg-muted rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
-                    style={{ width: `${missions.length > 0 ? (completedMissions / missions.length) * 100 : 0}%` }}
+                    style={{ width: `${myMissions.length > 0 ? (completedMissions / myMissions.length) * 100 : 0}%` }}
                   />
                 </div>
                 <p className="text-center text-sm text-muted-foreground mt-2">
-                  {missions.length > 0 ? Math.round((completedMissions / missions.length) * 100) : 0}% 완료!
+                  {myMissions.length > 0 ? Math.round((completedMissions / myMissions.length) * 100) : 0}% 완료!
                 </p>
               </CardContent>
             </Card>
@@ -247,12 +248,28 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                 미션 리스트
               </h2>
               <span className="text-sm text-muted-foreground">
-                {completedMissions}/{missions.length} 완료
+                {completedMissions}/{myMissions.length} 완료
               </span>
             </div>
 
+            {myMissions.length === 0 && (
+              <Card className="rounded-3xl border-2 border-dashed border-border">
+                <CardContent className="p-8 text-center">
+                  <ListTodo className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="font-semibold text-foreground">
+                    {isUnassigned ? '반 배정 후 미션이 나와요' : '아직 우리 반 미션이 없어요'}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {isUnassigned
+                      ? '선생님이 반을 정해주시면 미션이 여기 표시돼요.'
+                      : '선생님이 곧 미션을 준비해주실 거예요!'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="space-y-3">
-              {missions.map((mission) => {
+              {myMissions.map((mission) => {
                 const isCompleted = mission.completedBy.includes(child.id)
                 return (
                   <Card

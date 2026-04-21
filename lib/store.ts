@@ -37,44 +37,8 @@ const DEFAULT_PREP_GUIDE: PrepGuide = {
   ],
 };
 
-// Default missions
-const DEFAULT_MISSIONS: Mission[] = [
-  {
-    id: '1',
-    title: '친구와 인사하기',
-    description: '새로운 친구 3명에게 인사해요!',
-    completed: false,
-    completedBy: [],
-  },
-  {
-    id: '2',
-    title: '선생님 찾기',
-    description: '우리 반 선생님을 찾아서 하이파이브해요!',
-    completed: false,
-    completedBy: [],
-  },
-  {
-    id: '3',
-    title: '간식 먹기',
-    description: '맛있는 간식을 먹고 행복해지기!',
-    completed: false,
-    completedBy: [],
-  },
-  {
-    id: '4',
-    title: '사진 찍기',
-    description: '친구들과 함께 재미있는 사진을 찍어요!',
-    completed: false,
-    completedBy: [],
-  },
-  {
-    id: '5',
-    title: '게임 참여하기',
-    description: '신나는 게임에 참여해서 즐거운 시간을 보내요!',
-    completed: false,
-    completedBy: [],
-  },
-];
+// Default missions - empty; teachers add per-class missions themselves
+const DEFAULT_MISSIONS: Mission[] = [];
 
 // Default classes
 const DEFAULT_CLASSES: ClassInfo[] = [
@@ -156,9 +120,11 @@ export function findChildByNameAndPassword(name: string, password: string): Chil
 // Missions
 export function getMissions(): Mission[] {
   const missions = getItem<Mission[]>(STORAGE_KEYS.MISSIONS, []);
-  if (missions.length === 0) {
-    setItem(STORAGE_KEYS.MISSIONS, DEFAULT_MISSIONS);
-    return DEFAULT_MISSIONS;
+  // Migrate legacy missions (pre class-scoped). If any record lacks classNames,
+  // clear the list — per-class missions are added fresh by the teacher.
+  if (missions.some((m) => !Array.isArray((m as Mission).classNames))) {
+    setItem(STORAGE_KEYS.MISSIONS, []);
+    return [];
   }
   return missions;
 }
