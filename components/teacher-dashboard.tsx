@@ -26,10 +26,12 @@ import {
   getChildren,
   getClasses,
   getMissions,
-  saveMissions,
+  createMission,
+  deleteMission,
   toggleMissionForChild,
   logout,
 } from "@/lib/store"
+import { getSupabase } from "@/lib/supabase/client"
 import { ApplicationsView } from "@/components/applications-view"
 import { BulletinBoard } from "@/components/bulletin-board"
 import { PrepGuide } from "@/components/prep-guide"
@@ -59,9 +61,33 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
   const [newMissionClasses, setNewMissionClasses] = useState<string[]>([])
 
   useEffect(() => {
-    setChildren(getChildren())
-    setClasses(getClasses())
-    setMissions(getMissions())
+    let cancelled = false
+    const load = async () => {
+      try {
+        const [ch, cl, ms] = await Promise.all([getChildren(), getClasses(), getMissions()])
+        if (!cancelled) {
+          setChildren(ch)
+          setClasses(cl)
+          setMissions(ms)
+        }
+      } catch (err) {
+        console.error('Failed to load teacher dashboard data', err)
+      }
+    }
+    load()
+
+    const sb = getSupabase()
+    const channel = sb
+      .channel('teacher-dashboard')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'children' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'missions' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mission_completions' }, load)
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      sb.removeChannel(channel)
+    }
   }, [])
 
   const handleLogout = () => {
@@ -69,29 +95,30 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
     onLogout()
   }
 
-  const handleToggleMissionForChild = (missionId: string, childId: string) => {
-    const updated = toggleMissionForChild(missionId, childId)
-    setMissions(updated)
+  const handleToggleMissionForChild = async (missionId: string, childId: string) => {
+    try {
+      const updated = await toggleMissionForChild(missionId, childId)
+      setMissions(updated)
+    } catch (err) {
+      console.error('Failed to toggle mission', err)
+    }
   }
 
-  const handleAddMission = () => {
+  const handleAddMission = async () => {
     if (!newMissionTitle.trim() || newMissionClasses.length === 0) return
-
-    const newMission: Mission = {
-      id: Date.now().toString(),
-      title: newMissionTitle.trim(),
-      description: newMissionDesc.trim() || '미션을 완료해주세요!',
-      completed: false,
-      completedBy: [],
-      classNames: newMissionClasses,
+    try {
+      const updated = await createMission({
+        title: newMissionTitle.trim(),
+        description: newMissionDesc.trim() || '미션을 완료해주세요!',
+        classNames: newMissionClasses,
+      })
+      setMissions(updated)
+      setNewMissionTitle('')
+      setNewMissionDesc('')
+      setNewMissionClasses([])
+    } catch (err) {
+      console.error('Failed to add mission', err)
     }
-
-    const updated = [...missions, newMission]
-    saveMissions(updated)
-    setMissions(updated)
-    setNewMissionTitle('')
-    setNewMissionDesc('')
-    setNewMissionClasses([])
   }
 
   const toggleNewMissionClass = (name: string) => {
@@ -103,10 +130,13 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
   const missionsForChild = (child: Child) =>
     missions.filter((m) => m.classNames.includes(child.className))
 
-  const handleDeleteMission = (missionId: string) => {
-    const updated = missions.filter(m => m.id !== missionId)
-    saveMissions(updated)
-    setMissions(updated)
+  const handleDeleteMission = async (missionId: string) => {
+    try {
+      const updated = await deleteMission(missionId)
+      setMissions(updated)
+    } catch (err) {
+      console.error('Failed to delete mission', err)
+    }
   }
 
   const filteredChildren = children.filter(child =>

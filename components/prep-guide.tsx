@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import type { PrepGuide as PrepGuideData } from "@/lib/types"
 import { getPrepGuide, addPrepItem, removePrepItem } from "@/lib/store"
+import { getSupabase } from "@/lib/supabase/client"
 
 interface PrepGuideProps {
   editable?: boolean
@@ -24,25 +25,57 @@ export function PrepGuide({ editable = false }: PrepGuideProps) {
   const [newCaution, setNewCaution] = useState('')
 
   useEffect(() => {
-    setGuide(getPrepGuide())
+    let cancelled = false
+    const load = async () => {
+      try {
+        const g = await getPrepGuide()
+        if (!cancelled) setGuide(g)
+      } catch (err) {
+        console.error('Failed to load prep guide', err)
+      }
+    }
+    load()
+
+    const sb = getSupabase()
+    const channel = sb
+      .channel('prep-guide')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prep_items' }, load)
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      sb.removeChannel(channel)
+    }
   }, [])
 
   if (!guide) return null
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.trim()) return
-    setGuide(addPrepItem('items', newItem.trim()))
-    setNewItem('')
+    try {
+      setGuide(await addPrepItem('items', newItem.trim()))
+      setNewItem('')
+    } catch (err) {
+      console.error('Failed to add prep item', err)
+    }
   }
 
-  const handleAddCaution = () => {
+  const handleAddCaution = async () => {
     if (!newCaution.trim()) return
-    setGuide(addPrepItem('cautions', newCaution.trim()))
-    setNewCaution('')
+    try {
+      setGuide(await addPrepItem('cautions', newCaution.trim()))
+      setNewCaution('')
+    } catch (err) {
+      console.error('Failed to add caution', err)
+    }
   }
 
-  const handleRemove = (kind: 'items' | 'cautions', id: string) => {
-    setGuide(removePrepItem(kind, id))
+  const handleRemove = async (kind: 'items' | 'cautions', id: string) => {
+    try {
+      setGuide(await removePrepItem(kind, id))
+    } catch (err) {
+      console.error('Failed to remove prep item', err)
+    }
   }
 
   return (

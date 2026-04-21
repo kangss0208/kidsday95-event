@@ -37,24 +37,33 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  const handleChildLogin = () => {
+  const handleChildLogin = async () => {
     setError('')
     if (!name.trim() || !password.trim()) {
       setError('이름과 비밀번호를 입력해주세요')
       return
     }
 
-    const child = findChildByNameAndPassword(name.trim(), password)
-    if (child) {
-      setCurrentChild(child)
-      onLoginSuccess(false)
-    } else {
-      setError('일치하는 정보가 없어요. 처음이라면 등록해주세요!')
+    setBusy(true)
+    try {
+      const child = await findChildByNameAndPassword(name.trim(), password)
+      if (child) {
+        setCurrentChild(child)
+        onLoginSuccess(false)
+      } else {
+        setError('일치하는 정보가 없어요. 처음이라면 등록해주세요!')
+      }
+    } catch (err) {
+      console.error(err)
+      setError('로그인 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setBusy(false)
     }
   }
 
-  const handleChildRegister = () => {
+  const handleChildRegister = async () => {
     setError('')
     if (!name.trim()) {
       setError('이름을 입력해주세요')
@@ -65,24 +74,32 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
       return
     }
 
-    const existingChildren = getChildren()
-    if (existingChildren.some(c => c.name === name.trim() && c.password === password)) {
-      setError('이미 등록된 이름과 비밀번호예요')
-      return
-    }
+    setBusy(true)
+    try {
+      const existingChildren = await getChildren()
+      if (existingChildren.some(c => c.name === name.trim() && c.password === password)) {
+        setError('이미 등록된 이름과 비밀번호예요')
+        return
+      }
 
-    const newChild: Child = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      password,
-      className: '',
-      teacherName: '',
-      createdAt: new Date().toISOString(),
-    }
+      const newChild: Child = {
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        password,
+        className: '',
+        teacherName: '',
+        createdAt: new Date().toISOString(),
+      }
 
-    saveChild(newChild)
-    setCurrentChild(newChild)
-    onLoginSuccess(false)
+      await saveChild(newChild)
+      setCurrentChild(newChild)
+      onLoginSuccess(false)
+    } catch (err) {
+      console.error(err)
+      setError('등록 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const handleTeacherLogin = () => {
@@ -230,11 +247,12 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
                 <p className="text-destructive text-sm text-center">{error}</p>
               )}
 
-              <Button 
+              <Button
                 onClick={handleChildLogin}
+                disabled={busy}
                 className="w-full h-12 rounded-xl text-lg font-semibold"
               >
-                로그인
+                {busy ? '확인 중...' : '로그인'}
               </Button>
 
               <div className="text-center">
@@ -313,11 +331,12 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
                 <p className="text-destructive text-sm text-center">{error}</p>
               )}
 
-              <Button 
+              <Button
                 onClick={handleChildRegister}
+                disabled={busy}
                 className="w-full h-12 rounded-xl text-lg font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/80"
               >
-                등록하기
+                {busy ? '등록 중...' : '등록하기'}
               </Button>
             </CardContent>
           </Card>

@@ -28,21 +28,32 @@ export default function Home() {
 
   // Load event date + check existing session on mount
   useEffect(() => {
-    const storedDate = getEventDate()
-    setEventDateState(storedDate)
-    if (new Date() >= storedDate) {
-      setIsEventStarted(true)
-    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const storedDate = await getEventDate()
+        if (cancelled) return
+        setEventDateState(storedDate)
+        if (new Date() >= storedDate) {
+          setIsEventStarted(true)
+        }
+      } catch (err) {
+        console.error('Failed to load event date', err)
+      }
 
-    const child = getCurrentChild()
-    const teacher = getIsTeacher()
-
-    if (child) {
-      setCurrentChildState(child)
-    } else if (teacher) {
-      setIsTeacherState(true)
+      const child = getCurrentChild()
+      const teacher = getIsTeacher()
+      if (cancelled) return
+      if (child) {
+        setCurrentChildState(child)
+      } else if (teacher) {
+        setIsTeacherState(true)
+      }
+      setIsLoaded(true)
+    })()
+    return () => {
+      cancelled = true
     }
-    setIsLoaded(true)
   }, [])
 
   const handleSplashComplete = useCallback(() => {

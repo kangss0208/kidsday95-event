@@ -24,6 +24,7 @@ import {
   addComment,
   deleteComment,
 } from "@/lib/store"
+import { getSupabase } from "@/lib/supabase/client"
 import { childFontStack } from "@/lib/child-fonts"
 
 interface BulletinBoardProps {
@@ -51,45 +52,82 @@ export function BulletinBoard({ authorId, authorName, authorRole }: BulletinBoar
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    setPosts(getPosts())
+    let cancelled = false
+    const load = async () => {
+      try {
+        const p = await getPosts()
+        if (!cancelled) setPosts(p)
+      } catch (err) {
+        console.error('Failed to load posts', err)
+      }
+    }
+    load()
+
+    const sb = getSupabase()
+    const channel = sb
+      .channel('bulletin-board')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, load)
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      sb.removeChannel(channel)
+    }
   }, [])
 
   const canPost = authorRole === 'teacher'
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!title.trim() || !content.trim()) return
-    const updated = createPost({
-      title: title.trim(),
-      content: content.trim(),
-      authorId,
-      authorName,
-    })
-    setPosts(updated)
-    setTitle('')
-    setContent('')
-    setShowForm(false)
+    try {
+      const updated = await createPost({
+        title: title.trim(),
+        content: content.trim(),
+        authorId,
+        authorName,
+      })
+      setPosts(updated)
+      setTitle('')
+      setContent('')
+      setShowForm(false)
+    } catch (err) {
+      console.error('Failed to create post', err)
+    }
   }
 
-  const handleDelete = (postId: string) => {
+  const handleDelete = async (postId: string) => {
     if (!confirm('이 게시글을 삭제할까요?')) return
-    setPosts(deletePost(postId))
+    try {
+      setPosts(await deletePost(postId))
+    } catch (err) {
+      console.error('Failed to delete post', err)
+    }
   }
 
-  const handleAddComment = (postId: string) => {
+  const handleAddComment = async (postId: string) => {
     const draft = (commentDrafts[postId] || '').trim()
     if (!draft) return
-    const updated = addComment(postId, {
-      content: draft,
-      authorId,
-      authorName,
-      authorRole,
-    })
-    setPosts(updated)
-    setCommentDrafts((prev) => ({ ...prev, [postId]: '' }))
+    try {
+      const updated = await addComment(postId, {
+        content: draft,
+        authorId,
+        authorName,
+        authorRole,
+      })
+      setPosts(updated)
+      setCommentDrafts((prev) => ({ ...prev, [postId]: '' }))
+    } catch (err) {
+      console.error('Failed to add comment', err)
+    }
   }
 
-  const handleDeleteComment = (postId: string, commentId: string) => {
-    setPosts(deleteComment(postId, commentId))
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    try {
+      setPosts(await deleteComment(postId, commentId))
+    } catch (err) {
+      console.error('Failed to delete comment', err)
+    }
   }
 
   return (

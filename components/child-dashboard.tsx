@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import type { Child, Mission, ClassInfo } from "@/lib/types"
 import { getMissions, getClasses, logout } from "@/lib/store"
+import { getSupabase } from "@/lib/supabase/client"
 import { BulletinBoard } from "@/components/bulletin-board"
 import { PrepGuide } from "@/components/prep-guide"
 
@@ -34,8 +35,32 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
   const [classes, setClasses] = useState<ClassInfo[]>([])
 
   useEffect(() => {
-    setMissions(getMissions())
-    setClasses(getClasses())
+    let cancelled = false
+    const load = async () => {
+      try {
+        const [m, c] = await Promise.all([getMissions(), getClasses()])
+        if (!cancelled) {
+          setMissions(m)
+          setClasses(c)
+        }
+      } catch (err) {
+        console.error('Failed to load child dashboard data', err)
+      }
+    }
+    load()
+
+    // Realtime: refresh when teacher edits missions or completions change
+    const sb = getSupabase()
+    const channel = sb
+      .channel('child-dashboard')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'missions' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mission_completions' }, load)
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      sb.removeChannel(channel)
+    }
   }, [])
 
   const myClass = classes.find(c => c.name === child.className)

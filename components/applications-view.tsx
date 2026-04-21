@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import type { Child, ClassInfo } from "@/lib/types"
 import { getChildren, getClasses, deleteChild, saveChild } from "@/lib/store"
+import { getSupabase } from "@/lib/supabase/client"
 
 type SortKey = 'newest' | 'oldest' | 'class'
 
@@ -37,8 +38,30 @@ export function ApplicationsView() {
   const [sortKey, setSortKey] = useState<SortKey>('newest')
 
   useEffect(() => {
-    setChildren(getChildren())
-    setClasses(getClasses())
+    let cancelled = false
+    const load = async () => {
+      try {
+        const [ch, cl] = await Promise.all([getChildren(), getClasses()])
+        if (!cancelled) {
+          setChildren(ch)
+          setClasses(cl)
+        }
+      } catch (err) {
+        console.error('Failed to load applications', err)
+      }
+    }
+    load()
+
+    const sb = getSupabase()
+    const channel = sb
+      .channel('applications-view')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'children' }, load)
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      sb.removeChannel(channel)
+    }
   }, [])
 
   const filtered = useMemo(() => {
@@ -75,20 +98,28 @@ export function ApplicationsView() {
     return map
   }, [children])
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!confirm(`${name} 신청서를 삭제할까요?`)) return
-    deleteChild(id)
-    setChildren(getChildren())
+    try {
+      await deleteChild(id)
+      setChildren(await getChildren())
+    } catch (err) {
+      console.error('Failed to delete child', err)
+    }
   }
 
-  const handleAssignClass = (child: Child, className: string) => {
+  const handleAssignClass = async (child: Child, className: string) => {
     const classInfo = classes.find((c) => c.name === className)
-    saveChild({
-      ...child,
-      className,
-      teacherName: classInfo?.teacher || '',
-    })
-    setChildren(getChildren())
+    try {
+      await saveChild({
+        ...child,
+        className,
+        teacherName: classInfo?.teacher || '',
+      })
+      setChildren(await getChildren())
+    } catch (err) {
+      console.error('Failed to assign class', err)
+    }
   }
 
   return (

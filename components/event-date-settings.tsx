@@ -44,13 +44,24 @@ export function EventDateSettings() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const d = getEventDate()
-    setCurrent(d)
-    setDateInput(toDateInput(d))
-    setTimeInput(toTimeInput(d))
+    let cancelled = false
+    ;(async () => {
+      try {
+        const d = await getEventDate()
+        if (cancelled) return
+        setCurrent(d)
+        setDateInput(toDateInput(d))
+        setTimeInput(toTimeInput(d))
+      } catch (err) {
+        console.error('Failed to load event date', err)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setError('')
     setSaveMessage('')
     if (!dateInput || !timeInput) {
@@ -62,9 +73,14 @@ export function EventDateSettings() {
       setError('올바른 날짜/시간을 입력해주세요')
       return
     }
-    setEventDate(combined)
-    setCurrent(combined)
-    setSaveMessage('저장되었어요. 다음 진입부터 반영됩니다.')
+    try {
+      await setEventDate(combined)
+      setCurrent(combined)
+      setSaveMessage('저장되었어요. 다음 진입부터 반영됩니다.')
+    } catch (err) {
+      console.error('Failed to save event date', err)
+      setError('저장 중 오류가 발생했어요.')
+    }
   }
 
   if (!current) return null
