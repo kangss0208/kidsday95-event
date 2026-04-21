@@ -13,7 +13,7 @@ import { Users, Sparkles } from "lucide-react"
 import type { Child } from "@/lib/types"
 
 // Default fallback — actual value is loaded from store on mount (see useEffect)
-const DEFAULT_EVENT_DATE = new Date('2026-05-05T10:00:00')
+const DEFAULT_EVENT_DATE = new Date('2026-04-21T10:00:00')
 
 type AppScreen = 'splash' | 'pre-event' | 'login' | 'teacher-login' | 'child-dashboard' | 'teacher-dashboard'
 
@@ -131,7 +131,7 @@ export default function Home() {
 
           {/* Enter button - always visible */}
           <div className="mt-6 px-4">
-            <Button 
+            <Button
               onClick={() => setCurrentScreen('login')}
               className="w-full max-w-md mx-auto block h-14 rounded-2xl text-lg font-semibold"
             >
@@ -158,8 +158,8 @@ export default function Home() {
   // Login screen
   if (currentScreen === 'login') {
     return (
-      <LoginScreen 
-        onLoginSuccess={handleLoginSuccess} 
+      <LoginScreen
+        onLoginSuccess={handleLoginSuccess}
         isEventStarted={isEventStarted}
         onBack={!isEventStarted ? () => setCurrentScreen('pre-event') : undefined}
       />
@@ -169,9 +169,9 @@ export default function Home() {
   // Teacher-only login screen (before event)
   if (currentScreen === 'teacher-login') {
     return (
-      <LoginScreen 
-        onLoginSuccess={handleLoginSuccess} 
-        teacherOnly 
+      <LoginScreen
+        onLoginSuccess={handleLoginSuccess}
+        teacherOnly
         onBack={() => setCurrentScreen('pre-event')}
       />
     )
