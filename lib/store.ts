@@ -43,22 +43,22 @@ const DEFAULT_MISSIONS: Mission[] = [];
 // Default classes
 const DEFAULT_CLASSES: ClassInfo[] = [
   {
-    name: '햇살반',
-    teacher: '김사랑 선생님',
+    name: '홍랑해',
+    teacher: '김뮤우 원장님',
     children: [],
-    meetingLocation: '1층 로비 - 햇살반 깃발 앞',
+    meetingLocation: '1층 로비 - 홍랑해 깃발 앞',
   },
   {
-    name: '별빛반',
-    teacher: '이하늘 선생님',
+    name: '논랑해',
+    teacher: '강금쪽 선생님',
     children: [],
-    meetingLocation: '1층 로비 - 별빛반 깃발 앞',
+    meetingLocation: '1층 로비 - 논랑해 깃발 앞',
   },
   {
-    name: '무지개반',
-    teacher: '박구름 선생님',
+    name: '하니해',
+    teacher: '김쫑하 선생님',
     children: [],
-    meetingLocation: '2층 복도 - 무지개반 깃발 앞',
+    meetingLocation: '2층 복도 - 하니해 깃발 앞',
   },
 ];
 
@@ -84,7 +84,20 @@ function setItem<T>(key: string, value: T): void {
 
 // Children
 export function getChildren(): Child[] {
-  return getItem<Child[]>(STORAGE_KEYS.CHILDREN, []);
+  const children = getItem<Child[]>(STORAGE_KEYS.CHILDREN, []);
+  // Migrate: if a child's className no longer matches an active class,
+  // reset them to unassigned so the teacher can re-assign from current list.
+  const validNames = new Set(getClasses().map((c) => c.name));
+  let changed = false;
+  const fixed = children.map((c) => {
+    if (c.className && !validNames.has(c.className)) {
+      changed = true;
+      return { ...c, className: '', teacherName: '' };
+    }
+    return c;
+  });
+  if (changed) setItem(STORAGE_KEYS.CHILDREN, fixed);
+  return fixed;
 }
 
 export function saveChild(child: Child): void {
@@ -126,7 +139,20 @@ export function getMissions(): Mission[] {
     setItem(STORAGE_KEYS.MISSIONS, []);
     return [];
   }
-  return missions;
+  // Drop class names no longer present; remove missions with zero valid classes.
+  const validNames = new Set(getClasses().map((c) => c.name));
+  let changed = false;
+  const cleaned = missions
+    .map((m) => {
+      const kept = m.classNames.filter((n) => validNames.has(n));
+      if (kept.length !== m.classNames.length) changed = true;
+      return { ...m, classNames: kept };
+    })
+    .filter((m) => m.classNames.length > 0);
+  if (changed || cleaned.length !== missions.length) {
+    setItem(STORAGE_KEYS.MISSIONS, cleaned);
+  }
+  return cleaned;
 }
 
 export function saveMissions(missions: Mission[]): void {
@@ -155,6 +181,16 @@ export function toggleMissionForChild(missionId: string, childId: string): Missi
 export function getClasses(): ClassInfo[] {
   const classes = getItem<ClassInfo[]>(STORAGE_KEYS.CLASSES, []);
   if (classes.length === 0) {
+    setItem(STORAGE_KEYS.CLASSES, DEFAULT_CLASSES);
+    return DEFAULT_CLASSES;
+  }
+  // Migrate: if stored classes don't match current defaults by name, replace.
+  const defaultNames = new Set(DEFAULT_CLASSES.map((c) => c.name));
+  const storedNames = new Set(classes.map((c) => c.name));
+  const mismatch =
+    storedNames.size !== defaultNames.size ||
+    [...storedNames].some((n) => !defaultNames.has(n));
+  if (mismatch) {
     setItem(STORAGE_KEYS.CLASSES, DEFAULT_CLASSES);
     return DEFAULT_CLASSES;
   }

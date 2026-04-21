@@ -5,20 +5,23 @@ import { Heart, Star } from "lucide-react"
 
 const teachers = [
   {
-    name: "김사랑",
-    className: "햇살반",
+    name: "김뮤우",
+    title: "원장님",
+    className: "홍랑해",
     message: "아이들의 밝은 미소가 저의 행복이에요!",
     color: "bg-primary/20",
   },
   {
-    name: "이하늘",
-    className: "별빛반",
+    name: "강금쪽",
+    title: "선생님",
+    className: "논랑해",
     message: "함께 꿈을 키워가요!",
     color: "bg-secondary/40",
   },
   {
-    name: "박구름",
-    className: "무지개반",
+    name: "김쫑하",
+    title: "선생님",
+    className: "하니해",
     message: "매일매일 즐거운 하루를 만들어요!",
     color: "bg-accent/40",
   },
@@ -56,7 +59,7 @@ export function TeacherIntro({ onClose }: TeacherIntroProps) {
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-foreground">
-                          {teacher.name} 선생님
+                          {teacher.name} {teacher.title}
                         </h3>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <Star className="w-4 h-4 text-secondary-foreground fill-secondary" />

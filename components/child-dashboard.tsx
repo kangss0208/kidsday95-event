@@ -17,7 +17,7 @@ import {
   Backpack,
 } from "lucide-react"
 import type { Child, Mission, ClassInfo } from "@/lib/types"
-import { getMissions, toggleMissionForChild, getClasses, logout } from "@/lib/store"
+import { getMissions, getClasses, logout } from "@/lib/store"
 import { BulletinBoard } from "@/components/bulletin-board"
 import { PrepGuide } from "@/components/prep-guide"
 
@@ -37,11 +37,6 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
     setMissions(getMissions())
     setClasses(getClasses())
   }, [])
-
-  const handleToggleMission = (missionId: string) => {
-    const updated = toggleMissionForChild(missionId, child.id)
-    setMissions(updated)
-  }
 
   const myClass = classes.find(c => c.name === child.className)
   const isUnassigned = !child.className
@@ -268,18 +263,23 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
               </Card>
             )}
 
+            {myMissions.length > 0 && (
+              <p className="text-xs text-muted-foreground text-center">
+                선생님이 미션 완료를 체크해주실 거예요.
+              </p>
+            )}
+
             <div className="space-y-3">
               {myMissions.map((mission) => {
                 const isCompleted = mission.completedBy.includes(child.id)
                 return (
                   <Card
                     key={mission.id}
-                    className={`rounded-2xl border-2 transition-all cursor-pointer ${
+                    className={`rounded-2xl border-2 transition-all ${
                       isCompleted
                         ? 'border-primary/40 bg-primary/5'
-                        : 'border-border hover:border-primary/20'
+                        : 'border-border'
                     }`}
-                    onClick={() => handleToggleMission(mission.id)}
                   >
                     <CardContent className="p-4 flex items-start gap-3">
                       <div className="mt-0.5">
