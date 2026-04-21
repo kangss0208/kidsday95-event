@@ -44,6 +44,7 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
   }
 
   const myClass = classes.find(c => c.name === child.className)
+  const isUnassigned = !child.className
   const completedMissions = missions.filter(m => m.completedBy.includes(child.id)).length
 
   const handleLogout = () => {
@@ -71,7 +72,9 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
             </div>
             <div>
               <h1 className="font-bold text-foreground">{child.name}</h1>
-              <p className="text-sm text-muted-foreground">{child.className}</p>
+              <p className="text-sm text-muted-foreground">
+                {child.className || '반 배정 대기 중'}
+              </p>
             </div>
           </div>
           <button 
@@ -85,6 +88,19 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
 
       {/* Content */}
       <div className="p-4 max-w-lg mx-auto">
+        {isUnassigned && (
+          <Card className="rounded-2xl border-2 border-secondary/40 bg-secondary/10 mb-4">
+            <CardContent className="p-4 flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-secondary-foreground flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-foreground">반 배정을 기다리고 있어요</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  선생님이 곧 우리 반을 배정해주실 거예요. 조금만 기다려주세요!
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         {activeTab === 'info' && (
           <div className="space-y-4">
             <Card className="rounded-3xl border-2 border-primary/20 overflow-hidden">
@@ -95,7 +111,9 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                 <h2 className="text-2xl font-bold text-foreground">{child.name}</h2>
                 <div className="flex items-center justify-center gap-1 mt-2">
                   <Star className="w-4 h-4 text-secondary-foreground fill-secondary" />
-                  <span className="text-muted-foreground">{child.className}</span>
+                  <span className="text-muted-foreground">
+                    {child.className || '반 배정 대기 중'}
+                  </span>
                 </div>
               </div>
               <CardContent className="p-6 space-y-4">
@@ -103,7 +121,9 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                   <Users className="w-5 h-5 text-primary" />
                   <div>
                     <p className="text-sm text-muted-foreground">담임 선생님</p>
-                    <p className="font-semibold text-foreground">{child.teacherName}</p>
+                    <p className="font-semibold text-foreground">
+                      {child.teacherName || '배정 전이에요'}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50">
@@ -139,34 +159,46 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
 
         {activeTab === 'class' && (
           <div className="space-y-4">
-            <Card className="rounded-3xl border-2 border-primary/20">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-primary fill-primary" />
-                  {child.className}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 rounded-2xl bg-primary/10">
-                  <p className="text-sm text-muted-foreground mb-1">담임 선생님</p>
-                  <p className="text-lg font-bold text-foreground">{myClass?.teacher || child.teacherName}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">우리 반 친구들도 미션 중!</p>
-                  <div className="flex flex-wrap gap-2">
-                    {['미션 열심히!', '화이팅!', '함께해요!'].map((msg, i) => (
-                      <span 
-                        key={i}
-                        className="px-3 py-1 rounded-full bg-secondary/30 text-sm text-secondary-foreground"
-                      >
-                        {msg}
-                      </span>
-                    ))}
+            {isUnassigned ? (
+              <Card className="rounded-3xl border-2 border-dashed border-border">
+                <CardContent className="p-8 text-center space-y-2">
+                  <Heart className="w-12 h-12 text-muted-foreground mx-auto" />
+                  <p className="font-semibold text-foreground">아직 반이 정해지지 않았어요</p>
+                  <p className="text-sm text-muted-foreground">
+                    선생님이 배정해주시면 우리 반 정보를 볼 수 있어요.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="rounded-3xl border-2 border-primary/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-primary fill-primary" />
+                    {child.className}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-primary/10">
+                    <p className="text-sm text-muted-foreground mb-1">담임 선생님</p>
+                    <p className="text-lg font-bold text-foreground">{myClass?.teacher || child.teacherName}</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">우리 반 친구들도 미션 중!</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['미션 열심히!', '화이팅!', '함께해요!'].map((msg, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 rounded-full bg-secondary/30 text-sm text-secondary-foreground"
+                        >
+                          {msg}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
@@ -186,13 +218,22 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                     <p className="text-sm text-muted-foreground">지도 영역</p>
                   </div>
                 </div>
-                
-                <div className="p-4 rounded-2xl bg-accent/30 border-2 border-accent">
-                  <p className="font-bold text-foreground mb-1">{child.className} 집합 장소</p>
-                  <p className="text-muted-foreground">
-                    {myClass?.meetingLocation || '1층 로비'}
-                  </p>
-                </div>
+
+                {isUnassigned ? (
+                  <div className="p-4 rounded-2xl bg-muted/50 border-2 border-dashed border-border text-center">
+                    <p className="font-bold text-foreground mb-1">반 배정 후 안내돼요</p>
+                    <p className="text-sm text-muted-foreground">
+                      선생님이 반을 정해주시면 집합 장소를 볼 수 있어요.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-accent/30 border-2 border-accent">
+                    <p className="font-bold text-foreground mb-1">{child.className} 집합 장소</p>
+                    <p className="text-muted-foreground">
+                      {myClass?.meetingLocation || '1층 로비'}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

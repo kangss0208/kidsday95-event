@@ -4,24 +4,22 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-  Baby, 
-  GraduationCap, 
-  ArrowLeft, 
+import {
+  Baby,
+  GraduationCap,
+  ArrowLeft,
   Sparkles,
   User,
   Lock,
-  School,
   Clock
 } from "lucide-react"
-import { 
-  getChildren, 
-  saveChild, 
-  findChildByNameAndPassword, 
-  setCurrentChild, 
+import {
+  getChildren,
+  saveChild,
+  findChildByNameAndPassword,
+  setCurrentChild,
   setIsTeacher,
-  getClasses,
-  TEACHER_PASSWORD 
+  TEACHER_PASSWORD
 } from "@/lib/store"
 import type { Child } from "@/lib/types"
 
@@ -38,10 +36,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
   const [mode, setMode] = useState<LoginMode>(teacherOnly ? 'teacher' : 'select')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
-  const [selectedClass, setSelectedClass] = useState('')
   const [error, setError] = useState('')
-
-  const classes = getClasses()
 
   const handleChildLogin = () => {
     setError('')
@@ -69,10 +64,6 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
       setError('비밀번호는 숫자 4자리로 입력해주세요')
       return
     }
-    if (!selectedClass) {
-      setError('반을 선택해주세요')
-      return
-    }
 
     const existingChildren = getChildren()
     if (existingChildren.some(c => c.name === name.trim() && c.password === password)) {
@@ -80,13 +71,12 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
       return
     }
 
-    const classInfo = classes.find(c => c.name === selectedClass)
     const newChild: Child = {
       id: Date.now().toString(),
       name: name.trim(),
       password,
-      className: selectedClass,
-      teacherName: classInfo?.teacher || '',
+      className: '',
+      teacherName: '',
       createdAt: new Date().toISOString(),
     }
 
@@ -108,7 +98,6 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
   const resetForm = () => {
     setName('')
     setPassword('')
-    setSelectedClass('')
     setError('')
   }
 
@@ -316,27 +305,9 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <School className="w-4 h-4" />
-                  우리 반
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {classes.map((cls) => (
-                    <button
-                      key={cls.name}
-                      onClick={() => setSelectedClass(cls.name)}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        selectedClass === cls.name
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <span className="text-sm font-medium">{cls.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                반은 선생님이 배정해주실 거예요.
+              </p>
 
               {error && (
                 <p className="text-destructive text-sm text-center">{error}</p>

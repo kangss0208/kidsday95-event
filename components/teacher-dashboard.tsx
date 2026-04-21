@@ -204,7 +204,11 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-foreground truncate">{child.name}</h3>
-                            <p className="text-sm text-muted-foreground">{child.className} / {child.teacherName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {child.className
+                                ? `${child.className} / ${child.teacherName}`
+                                : '미배정 — 신청서 탭에서 배정해주세요'}
+                            </p>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">

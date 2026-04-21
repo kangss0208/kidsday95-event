@@ -1,19 +1,19 @@
 export const CHILD_FONT_FAMILIES = [
-  'ChildGriun',
-  'ChildJunwu',
-  'ChildYoonManSeh',
-  'ChildYoonMinGuk',
-  'ChildBMDohyeon',
-  'ChildBMEuljiro',
-  'ChildBMEuljiro10',
-  'ChildBMEuljiroOraeOrae',
-  'ChildBMHanna11',
-  'ChildBMHannaAir',
-  'ChildBMHannaPro',
-  'ChildBMJua',
-  'ChildBMKirangHaerang',
-  'ChildBMKkubulim',
-  'ChildBMYeonSung',
+  'Gaegu',
+  'Dongle',
+  'Do Hyeon',
+  'Jua',
+  'Gamja Flower',
+  'Black Han Sans',
+  'Hi Melody',
+  'Yeon Sung',
+  'Single Day',
+  'Poor Story',
+  'Kirang Haerang',
+  'Nanum Pen Script',
+  'Nanum Brush Script',
+  'Cute Font',
+  'East Sea Dokdo',
 ] as const;
 
 export function pickChildFont(key: string): string {
@@ -26,5 +26,5 @@ export function pickChildFont(key: string): string {
 }
 
 export function childFontStack(key: string): string {
-  return `'${pickChildFont(key)}', 'Maplestory', sans-serif`;
+  return `'${pickChildFont(key)}', sans-serif`;
 }

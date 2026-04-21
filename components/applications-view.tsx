@@ -15,7 +15,7 @@ import {
   Users,
 } from "lucide-react"
 import type { Child, ClassInfo } from "@/lib/types"
-import { getChildren, getClasses, deleteChild } from "@/lib/store"
+import { getChildren, getClasses, deleteChild, saveChild } from "@/lib/store"
 
 type SortKey = 'newest' | 'oldest' | 'class'
 
@@ -81,6 +81,16 @@ export function ApplicationsView() {
     setChildren(getChildren())
   }
 
+  const handleAssignClass = (child: Child, className: string) => {
+    const classInfo = classes.find((c) => c.name === className)
+    saveChild({
+      ...child,
+      className,
+      teacherName: classInfo?.teacher || '',
+    })
+    setChildren(getChildren())
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -92,7 +102,22 @@ export function ApplicationsView() {
       </div>
 
       {/* Class summary */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Card
+          className={`rounded-2xl border-2 cursor-pointer transition-colors ${
+            classFilter === ''
+              ? 'border-destructive bg-destructive/5'
+              : 'border-border hover:border-destructive/40'
+          }`}
+          onClick={() => setClassFilter(classFilter === '' ? 'all' : '')}
+        >
+          <CardContent className="p-3 text-center">
+            <p className="text-xs text-muted-foreground">미배정</p>
+            <p className="text-xl font-bold text-foreground">
+              {byClass[''] || 0}
+            </p>
+          </CardContent>
+        </Card>
         {classes.map((cls) => (
           <Card
             key={cls.name}
@@ -180,20 +205,38 @@ export function ApplicationsView() {
                         {child.name[0]}
                       </span>
                     </div>
-                    <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <h3 className="font-semibold text-foreground truncate">
                           {child.name}
                         </h3>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <School className="w-3.5 h-3.5" />
-                        <span>{child.className}</span>
-                        <span>·</span>
-                        <GraduationCap className="w-3.5 h-3.5" />
-                        <span className="truncate">{child.teacherName}</span>
+                      <div className="flex items-center gap-2 text-sm">
+                        <School className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        <select
+                          value={child.className}
+                          onChange={(e) => handleAssignClass(child, e.target.value)}
+                          className={`flex-1 min-w-0 rounded-lg border-2 px-2 py-1 text-sm bg-background ${
+                            child.className
+                              ? 'border-border text-foreground'
+                              : 'border-destructive/40 text-destructive'
+                          }`}
+                        >
+                          <option value="">미배정</option>
+                          {classes.map((cls) => (
+                            <option key={cls.name} value={cls.name}>
+                              {cls.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
+                      {child.teacherName && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <GraduationCap className="w-3.5 h-3.5" />
+                          <span className="truncate">{child.teacherName}</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Lock className="w-3 h-3" />
                         <span>비번 {child.password}</span>

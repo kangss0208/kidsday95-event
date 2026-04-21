@@ -52,6 +52,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="bg-background">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Cute+Font&family=Do+Hyeon&family=Dongle:wght@300;400;700&family=East+Sea+Dokdo&family=Gaegu:wght@300;400;700&family=Gamja+Flower&family=Hi+Melody&family=Jua&family=Kirang+Haerang&family=Nanum+Brush+Script&family=Nanum+Pen+Script&family=Poor+Story&family=Single+Day&family=Yeon+Sung&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className={`${nunito.variable} ${nunitoSans.variable} font-sans antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
