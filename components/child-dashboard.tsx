@@ -2,22 +2,26 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  User, 
-  Users, 
-  MapPin, 
-  ListTodo, 
+import {
+  User,
+  Users,
+  MapPin,
+  ListTodo,
   LogOut,
   CheckCircle2,
   Circle,
   Star,
   Heart,
-  Sparkles
+  Sparkles,
+  MessageSquare,
+  Backpack,
 } from "lucide-react"
 import type { Child, Mission, ClassInfo } from "@/lib/types"
 import { getMissions, toggleMissionForChild, getClasses, logout } from "@/lib/store"
+import { BulletinBoard } from "@/components/bulletin-board"
+import { PrepGuide } from "@/components/prep-guide"
 
-type Tab = 'info' | 'class' | 'location' | 'missions'
+type Tab = 'info' | 'class' | 'location' | 'missions' | 'bulletin' | 'prep'
 
 interface ChildDashboardProps {
   child: Child
@@ -52,6 +56,8 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
     { id: 'class' as Tab, label: '우리 반', icon: Users },
     { id: 'location' as Tab, label: '만나는 곳', icon: MapPin },
     { id: 'missions' as Tab, label: '미션', icon: ListTodo },
+    { id: 'bulletin' as Tab, label: '게시판', icon: MessageSquare },
+    { id: 'prep' as Tab, label: '준비물', icon: Backpack },
   ]
 
   return (
@@ -208,11 +214,11 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
               {missions.map((mission) => {
                 const isCompleted = mission.completedBy.includes(child.id)
                 return (
-                  <Card 
+                  <Card
                     key={mission.id}
                     className={`rounded-2xl border-2 transition-all cursor-pointer ${
-                      isCompleted 
-                        ? 'border-primary/40 bg-primary/5' 
+                      isCompleted
+                        ? 'border-primary/40 bg-primary/5'
                         : 'border-border hover:border-primary/20'
                     }`}
                     onClick={() => handleToggleMission(mission.id)}
@@ -240,6 +246,16 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
             </div>
           </div>
         )}
+
+        {activeTab === 'bulletin' && (
+          <BulletinBoard
+            authorId={child.id}
+            authorName={child.name}
+            authorRole="child"
+          />
+        )}
+
+        {activeTab === 'prep' && <PrepGuide />}
       </div>
 
       {/* Bottom Navigation */}
@@ -252,12 +268,12 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center py-3 px-4 transition-colors ${
+                className={`flex flex-col items-center py-3 px-2 min-w-0 transition-colors ${
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
-                <Icon className={`w-6 h-6 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                <span className="text-xs mt-1 font-medium">{tab.label}</span>
+                <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                <span className="text-[11px] mt-1 font-medium whitespace-nowrap">{tab.label}</span>
               </button>
             )
           })}

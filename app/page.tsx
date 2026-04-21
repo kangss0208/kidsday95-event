@@ -8,12 +8,12 @@ import { LoginScreen } from "@/components/login-screen"
 import { ChildDashboard } from "@/components/child-dashboard"
 import { TeacherDashboard } from "@/components/teacher-dashboard"
 import { Button } from "@/components/ui/button"
-import { getCurrentChild, getIsTeacher } from "@/lib/store"
+import { getCurrentChild, getIsTeacher, getEventDate } from "@/lib/store"
 import { Users, Sparkles } from "lucide-react"
 import type { Child } from "@/lib/types"
 
-// Event date - change this to your actual event date
-const EVENT_DATE = new Date('2026-05-05T10:00:00')
+// Default fallback — actual value is loaded from store on mount (see useEffect)
+const DEFAULT_EVENT_DATE = new Date('2026-05-05T10:00:00')
 
 type AppScreen = 'splash' | 'pre-event' | 'login' | 'teacher-login' | 'child-dashboard' | 'teacher-dashboard'
 
@@ -24,20 +24,16 @@ export default function Home() {
   const [isTeacher, setIsTeacherState] = useState(false)
   const [isEventStarted, setIsEventStarted] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [eventDate, setEventDateState] = useState<Date>(DEFAULT_EVENT_DATE)
 
-  // Check if event has started
+  // Load event date + check existing session on mount
   useEffect(() => {
-    const checkEventStatus = () => {
-      const now = new Date()
-      if (now >= EVENT_DATE) {
-        setIsEventStarted(true)
-      }
+    const storedDate = getEventDate()
+    setEventDateState(storedDate)
+    if (new Date() >= storedDate) {
+      setIsEventStarted(true)
     }
-    checkEventStatus()
-  }, [])
 
-  // Check existing session on mount
-  useEffect(() => {
     const child = getCurrentChild()
     const teacher = getIsTeacher()
 
@@ -127,8 +123,8 @@ export default function Home() {
 
         {/* Countdown */}
         <div className="flex-1 flex flex-col justify-center">
-          <CountdownTimer 
-            targetDate={EVENT_DATE} 
+          <CountdownTimer
+            targetDate={eventDate}
             eventName="이벤트 시작까지"
             onEventStart={handleEventStart}
           />

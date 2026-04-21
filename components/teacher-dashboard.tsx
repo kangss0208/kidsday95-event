@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-  Users, 
-  ListTodo, 
+import {
+  Users,
+  ListTodo,
   LogOut,
   CheckCircle2,
   Circle,
@@ -15,18 +15,32 @@ import {
   ChevronDown,
   ChevronUp,
   GraduationCap,
-  Search
+  Search,
+  FileText,
+  MessageSquare,
+  Backpack,
+  Settings,
 } from "lucide-react"
 import type { Child, Mission } from "@/lib/types"
-import { 
-  getChildren, 
-  getMissions, 
-  saveMissions, 
+import {
+  getChildren,
+  getMissions,
+  saveMissions,
   toggleMissionForChild,
-  logout 
+  logout,
 } from "@/lib/store"
+import { ApplicationsView } from "@/components/applications-view"
+import { BulletinBoard } from "@/components/bulletin-board"
+import { PrepGuide } from "@/components/prep-guide"
+import { EventDateSettings } from "@/components/event-date-settings"
 
-type Tab = 'children' | 'missions'
+type Tab = 'children' | 'missions' | 'applications' | 'bulletin' | 'prep' | 'settings'
+
+const TEACHER_AUTHOR = {
+  id: 'teacher_admin',
+  name: '선생님',
+  role: 'teacher' as const,
+}
 
 interface TeacherDashboardProps {
   onLogout: () => void
@@ -80,7 +94,7 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
     setMissions(updated)
   }
 
-  const filteredChildren = children.filter(child => 
+  const filteredChildren = children.filter(child =>
     child.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     child.className.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -89,6 +103,15 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
     const completed = missions.filter(m => m.completedBy.includes(childId)).length
     return { completed, total: missions.length }
   }
+
+  const tabs: { key: Tab; label: string; Icon: typeof Users }[] = [
+    { key: 'children', label: `어린이 (${children.length})`, Icon: Users },
+    { key: 'missions', label: `미션 (${missions.length})`, Icon: ListTodo },
+    { key: 'applications', label: '신청서', Icon: FileText },
+    { key: 'bulletin', label: '게시판', Icon: MessageSquare },
+    { key: 'prep', label: '준비물', Icon: Backpack },
+    { key: 'settings', label: '설정', Icon: Settings },
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/10 via-background to-primary/5 pb-20">
@@ -104,7 +127,7 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
               <p className="text-sm text-muted-foreground">CARAT 9559</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={handleLogout}
             className="p-2 rounded-xl hover:bg-muted transition-colors"
           >
@@ -113,31 +136,26 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
         </div>
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation (scrollable on overflow) */}
       <div className="bg-card border-b border-border">
-        <div className="flex max-w-2xl mx-auto">
-          <button
-            onClick={() => setActiveTab('children')}
-            className={`flex-1 py-3 text-center font-medium transition-colors border-b-2 ${
-              activeTab === 'children' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-muted-foreground'
-            }`}
-          >
-            <Users className="w-5 h-5 inline mr-2" />
-            어린이 목록 ({children.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('missions')}
-            className={`flex-1 py-3 text-center font-medium transition-colors border-b-2 ${
-              activeTab === 'missions' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-muted-foreground'
-            }`}
-          >
-            <ListTodo className="w-5 h-5 inline mr-2" />
-            미션 관리 ({missions.length})
-          </button>
+        <div className="max-w-2xl mx-auto flex overflow-x-auto">
+          {tabs.map(({ key, label, Icon }) => {
+            const isActive = activeTab === key
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`shrink-0 px-4 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+                  isActive
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon className="w-4 h-4 inline mr-1.5" />
+                {label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -172,8 +190,8 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                   const isExpanded = expandedChild === child.id
 
                   return (
-                    <Card 
-                      key={child.id} 
+                    <Card
+                      key={child.id}
                       className="rounded-2xl border-2 border-border overflow-hidden"
                     >
                       <CardContent className="p-0">
@@ -258,7 +276,7 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                   onChange={(e) => setNewMissionDesc(e.target.value)}
                   className="rounded-xl"
                 />
-                <Button 
+                <Button
                   onClick={handleAddMission}
                   disabled={!newMissionTitle.trim()}
                   className="w-full rounded-xl"
@@ -297,6 +315,20 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
             </div>
           </div>
         )}
+
+        {activeTab === 'applications' && <ApplicationsView />}
+
+        {activeTab === 'bulletin' && (
+          <BulletinBoard
+            authorId={TEACHER_AUTHOR.id}
+            authorName={TEACHER_AUTHOR.name}
+            authorRole={TEACHER_AUTHOR.role}
+          />
+        )}
+
+        {activeTab === 'prep' && <PrepGuide editable />}
+
+        {activeTab === 'settings' && <EventDateSettings />}
       </div>
     </div>
   )
