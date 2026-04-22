@@ -7,23 +7,23 @@ const teachers = [
   {
     name: "김뮤우",
     title: "원장님",
-    className: "홍랑해",
+    className: "슈랑",
     message: "조용!",
-    color: "bg-primary/20",
+    background: "#dbe8ff",
   },
   {
     name: "강금쪽",
     title: "선생님",
     className: "논랑해",
-    message: "구랭!",
-    color: "bg-secondary/40",
+    message: "으헤헤",
+    background: "linear-gradient(133deg, #e3ecff 34%, #ffe1e9 100%)",
   },
   {
     name: "김쫑하",
     title: "선생님",
     className: "하니해",
-    message: "아엄..",
-    color: "bg-accent/40",
+    message: "한마디 제발요",
+    background: "#ffe1e9",
   },
 ]
 
@@ -52,7 +52,7 @@ export function TeacherIntro({ onClose }: TeacherIntroProps) {
                 className="rounded-3xl border-2 border-primary/10 overflow-hidden"
               >
                 <CardContent className="p-0">
-                  <div className={`${teacher.color} p-4`}>
+                  <div className="p-4" style={{ background: teacher.background }}>
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center text-2xl font-bold text-primary shadow-md">
                         {teacher.name[0]}

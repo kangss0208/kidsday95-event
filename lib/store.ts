@@ -60,8 +60,12 @@ export function logout(): void {
   setTeacherClass(null);
 }
 
-export const ADMIN_PASSWORD = '9559';
-export const TEACHER_COMMON_PASSWORD = '0001';
+export const ADMIN_PASSWORD = 'admin';
+export const TEACHER_PASSWORDS: Record<string, string> = {
+  '홍랑해': '1230',
+  '논랑해': '0218',
+  '하니해': '1004',
+};
 const DEFAULT_EVENT_DATE_ISO = '2026-05-05T10:00:00';
 
 // ─── Row → domain mappers ─────────────────────────────────────

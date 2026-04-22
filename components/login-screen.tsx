@@ -24,13 +24,13 @@ import {
   setTeacherClass,
   getClasses,
   ADMIN_PASSWORD,
-  TEACHER_COMMON_PASSWORD,
+  TEACHER_PASSWORDS,
 } from "@/lib/store"
 import type { Child, ClassInfo } from "@/lib/types"
 
 export type LoginRole = 'child' | 'teacher' | 'admin'
 
-type LoginMode = 'select' | 'child-login' | 'child-register' | 'teacher-select' | 'admin'
+type LoginMode = 'select' | 'adult-select' | 'child-login' | 'child-register' | 'teacher-select' | 'admin'
 
 interface LoginScreenProps {
   onLoginSuccess: (role: LoginRole) => void
@@ -117,7 +117,8 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
       setError('반을 선택해주세요')
       return
     }
-    if (password !== TEACHER_COMMON_PASSWORD) {
+    const expected = TEACHER_PASSWORDS[selectedClass]
+    if (!expected || password !== expected) {
       setError('비밀번호가 틀렸어요')
       return
     }
@@ -171,8 +172,8 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
                   <Clock className="w-8 h-8 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-primary font-medium">조금만 기다려주세요!</p>
-                  <p className="text-xs text-muted-foreground mt-1">95의 어린이날에 오픈되요</p>
+                  <p className="text-sm text-primary font-medium">95들 기다렷!</p>
+                  <p className="text-xs text-muted-foreground mt-1">곧이야 기다렷!</p>
                 </div>
               </CardContent>
             </Card>
@@ -194,6 +195,43 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
             </Card>
           )}
 
+          {/* 어른이 카드 (선생님/관리자 통합 진입) */}
+          <Card
+            className="rounded-3xl border-2 border-secondary/30 cursor-pointer hover:border-secondary/50 hover:shadow-lg transition-all"
+            onClick={() => { resetForm(); setMode('adult-select') }}
+          >
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-secondary/30 flex items-center justify-center">
+                <GraduationCap className="w-8 h-8 text-secondary-foreground" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg text-foreground">어른이</h3>
+                <p className="text-sm text-muted-foreground">선생님 또는 관리자예요</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (mode === 'adult-select') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-secondary/10 via-background to-primary/10">
+        <button
+          onClick={() => setMode('select')}
+          className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>돌아가기</span>
+        </button>
+
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">어른이</h1>
+          <p className="text-muted-foreground">어떤 역할이신가요?</p>
+        </div>
+
+        <div className="w-full max-w-sm space-y-4">
           {/* 선생님 카드 */}
           <Card
             className="rounded-3xl border-2 border-secondary/30 cursor-pointer hover:border-secondary/50 hover:shadow-lg transition-all"
@@ -385,7 +423,7 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
     return (
       <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-secondary/10 via-background to-primary/10">
         <button
-          onClick={() => setMode('select')}
+          onClick={() => setMode('adult-select')}
           className="flex items-center gap-2 text-muted-foreground mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -413,11 +451,10 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
                     <button
                       key={cls.name}
                       onClick={() => { setSelectedClass(cls.name); setError('') }}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        selectedClass === cls.name
+                      className={`p-3 rounded-xl border-2 transition-all ${selectedClass === cls.name
                           ? 'border-primary bg-primary/10'
                           : 'border-border hover:border-primary/50'
-                      }`}
+                        }`}
                     >
                       <span className="text-sm font-medium">{cls.name}</span>
                     </button>
@@ -462,7 +499,7 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
   return (
     <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-secondary/10 via-background to-primary/10">
       <button
-        onClick={() => (adminOnly && onBack ? onBack() : setMode('select'))}
+        onClick={() => (adminOnly && onBack ? onBack() : setMode('adult-select'))}
         className="flex items-center gap-2 text-muted-foreground mb-6"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -487,13 +524,10 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
               </label>
               <Input
                 type="password"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={4}
-                placeholder="****"
+                placeholder="비밀번호"
                 value={password}
-                onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                className="rounded-xl h-12 text-center text-2xl tracking-widest"
+                onChange={(e) => setPassword(e.target.value)}
+                className="rounded-xl h-12 text-center text-lg tracking-wider"
               />
             </div>
 
