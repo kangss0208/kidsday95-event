@@ -172,7 +172,7 @@ export default function Home() {
               className="text-[rgb(219,_232,_255)] ml-2 max-[380px]:block max-[380px]:ml-0"
               style={{ textShadow: '#adadad 1px 1px 1px' }}
             >
-              키링언니들
+              키링들
             </span>
           </h1>
           <p className="text-muted-foreground mt-2"></p>

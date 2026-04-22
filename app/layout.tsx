@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     locale: 'ko_KR',
     images: [
       {
-        url: '/kakao_share.png',
+        url: '/kakao_share2.png',
         width: 1200,
         height: 630,
         alt: '95들의 어린이날 - 제1회 뮤우어린이집 현장학습',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '95들의 어린이날',
     description: '제1회 뮤우어린이집 현장학습',
-    images: ['/kakao_share.png'],
+    images: ['/kakao_share2.png'],
   },
   icons: {
     icon: [
