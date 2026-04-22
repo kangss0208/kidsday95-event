@@ -24,14 +24,16 @@ import {
   Menu,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import type { Child, ClassInfo, Mission } from "@/lib/types"
+import type { Child, ClassInfo, Mission, MeetingPoint } from "@/lib/types"
 import {
   getChildren,
   getClasses,
   getMissions,
+  getMeetingPoints,
   createMission,
   deleteMission,
   toggleMissionForChild,
+  pickMeetingPointForChild,
   logout,
 } from "@/lib/store"
 import { getSupabase } from "@/lib/supabase/client"
@@ -58,6 +60,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [children, setChildren] = useState<Child[]>([])
   const [classes, setClasses] = useState<ClassInfo[]>([])
   const [missions, setMissions] = useState<Mission[]>([])
+  const [meetingPoints, setMeetingPoints] = useState<MeetingPoint[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedChild, setExpandedChild] = useState<string | null>(null)
   const [newMissionTitle, setNewMissionTitle] = useState('')
@@ -69,14 +72,20 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     let cancelled = false
     const load = async () => {
       try {
-        const [ch, cl, ms] = await Promise.all([getChildren(), getClasses(), getMissions()])
+        const [ch, cl, ms, mp] = await Promise.all([
+          getChildren(),
+          getClasses(),
+          getMissions(),
+          getMeetingPoints(),
+        ])
         if (!cancelled) {
           setChildren(ch)
           setClasses(cl)
           setMissions(ms)
+          setMeetingPoints(mp)
         }
       } catch (err) {
-        console.error('Failed to load teacher dashboard data', err)
+        console.error('Failed to load admin dashboard data', err)
       }
     }
     load()
@@ -223,6 +232,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   const progress = getChildMissionProgress(child)
                   const childMissions = missionsForChild(child)
                   const isExpanded = expandedChild === child.id
+                  const meetingPoint = pickMeetingPointForChild(child.id, meetingPoints)
 
                   return (
                     <Card
@@ -244,6 +254,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                                 ? `${child.className} / ${child.teacherName}`
                                 : '미배정 — 신청서 탭에서 배정해주세요'}
                             </p>
+                            {meetingPoint && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                만날 곳: {meetingPoint.name}
+                              </p>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">

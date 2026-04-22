@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { MapPin } from "lucide-react"
-import { getMeetingPoints } from "@/lib/store"
+import { getMeetingPoints, pickMeetingPointForChild } from "@/lib/store"
 
 const DEFAULT_LOCATION = {
   name: '서울역 10번 출구',
@@ -31,9 +31,9 @@ export function LocationMap({ childId }: Props) {
       ; (async () => {
         try {
           const points = await getMeetingPoints()
-          if (points.length > 0 && !cancelled) {
-            const hash = parseInt(childId.replace(/-/g, '').slice(0, 8), 16)
-            const p = points[hash % points.length]
+          if (cancelled) return
+          const p = pickMeetingPointForChild(childId, points)
+          if (p) {
             setLocation({ name: p.name, lat: p.lat, lng: p.lng })
           }
         } catch { }

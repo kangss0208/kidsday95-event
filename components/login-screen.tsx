@@ -87,17 +87,21 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
     }
     setBusy(true)
     try {
-      const existingChildren = await getChildren()
+      const [existingChildren, classesList] = await Promise.all([getChildren(), getClasses()])
       if (existingChildren.some((c) => c.name === name.trim() && c.password === password)) {
         setError('이미 등록된 이름과 비밀번호예요')
         return
       }
+      const randomClass =
+        classesList.length > 0
+          ? classesList[Math.floor(Math.random() * classesList.length)]
+          : null
       const newChild: Child = {
         id: crypto.randomUUID(),
         name: name.trim(),
         password,
-        className: '',
-        teacherName: '',
+        className: randomClass?.name ?? '',
+        teacherName: randomClass?.teacher ?? '',
         createdAt: new Date().toISOString(),
       }
       await saveChild(newChild)
@@ -400,7 +404,7 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
               </div>
 
               <p className="text-xs text-muted-foreground text-center">
-                반은 선생님이 배정해주실 거예요.
+                반은 자동으로 배정되고, 관리자가 필요 시 변경해요.
               </p>
 
               {error && <p className="text-destructive text-sm text-center">{error}</p>}

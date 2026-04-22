@@ -66,6 +66,18 @@ export const TEACHER_PASSWORDS: Record<string, string> = {
   '논랑해': '0218',
   '하니해': '1004',
 };
+
+// 어린이 ID를 해시로 돌려 meeting points 중 하나에 결정적으로 배정
+export function pickMeetingPointForChild(
+  childId: string,
+  points: MeetingPoint[]
+): MeetingPoint | null {
+  if (!points.length) return null;
+  const hex = childId.replace(/-/g, '').slice(0, 8);
+  const hash = parseInt(hex, 16);
+  if (isNaN(hash)) return points[0];
+  return points[hash % points.length];
+}
 const DEFAULT_EVENT_DATE_ISO = '2026-05-05T10:00:00';
 
 // ─── Row → domain mappers ─────────────────────────────────────

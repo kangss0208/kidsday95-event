@@ -18,14 +18,16 @@ import {
   MessageSquare,
   Backpack,
 } from "lucide-react"
-import type { Child, ClassInfo, Mission } from "@/lib/types"
+import type { Child, ClassInfo, Mission, MeetingPoint } from "@/lib/types"
 import {
   getChildren,
   getClasses,
   getMissions,
+  getMeetingPoints,
   createMission,
   deleteMission,
   toggleMissionForChild,
+  pickMeetingPointForChild,
   logout,
 } from "@/lib/store"
 import { getSupabase } from "@/lib/supabase/client"
@@ -46,6 +48,7 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
   const [children, setChildren] = useState<Child[]>([])
   const [classes, setClasses] = useState<ClassInfo[]>([])
   const [missions, setMissions] = useState<Mission[]>([])
+  const [meetingPoints, setMeetingPoints] = useState<MeetingPoint[]>([])
   const [expandedChild, setExpandedChild] = useState<string | null>(null)
   const [newMissionTitle, setNewMissionTitle] = useState('')
   const [newMissionDesc, setNewMissionDesc] = useState('')
@@ -54,11 +57,17 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
     let cancelled = false
     const load = async () => {
       try {
-        const [ch, cl, ms] = await Promise.all([getChildren(), getClasses(), getMissions()])
+        const [ch, cl, ms, mp] = await Promise.all([
+          getChildren(),
+          getClasses(),
+          getMissions(),
+          getMeetingPoints(),
+        ])
         if (!cancelled) {
           setChildren(ch)
           setClasses(cl)
           setMissions(ms)
+          setMeetingPoints(mp)
         }
       } catch (err) {
         console.error('Failed to load teacher dashboard data', err)
@@ -200,6 +209,7 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
                     {myChildren.map((child) => {
                       const progress = getChildMissionProgress(child.id)
                       const isExpanded = expandedChild === child.id
+                      const meetingPoint = pickMeetingPointForChild(child.id, meetingPoints)
                       return (
                         <Card key={child.id} className="rounded-2xl border-2 border-border overflow-hidden">
                           <CardContent className="p-0">
@@ -213,6 +223,11 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-foreground truncate">{child.name}</h3>
                                 <p className="text-sm text-muted-foreground">{child.className}</p>
+                                {meetingPoint && (
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    만날 곳: {meetingPoint.name}
+                                  </p>
+                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm text-muted-foreground">
