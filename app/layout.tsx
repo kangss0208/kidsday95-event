@@ -1,60 +1,54 @@
-import type { Metadata, Viewport } from 'next'
-import { Nunito, Nunito_Sans } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type { Metadata, Viewport } from 'next';
+import { Nunito, Nunito_Sans } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import './globals.css';
 
-const nunito = Nunito({ 
-  subsets: ["latin"],
+const nunito = Nunito({
+  subsets: ['latin'],
   variable: '--font-sans',
-  weight: ['400', '500', '600', '700', '800']
+  weight: ['400', '500', '600', '700', '800'],
 });
 
-const nunitoSans = Nunito_Sans({ 
-  subsets: ["latin"],
+const nunitoSans = Nunito_Sans({
+  subsets: ['latin'],
   variable: '--font-mono',
-  weight: ['400', '500', '600']
+  weight: ['400', '500', '600'],
 });
 
 export const metadata: Metadata = {
-  title: 'CARAT 9559 - 특별한 어린이 이벤트',
-  description: 'CARAT 9559와 함께하는 특별한 어린이 이벤트에 초대합니다!',
+  title: '95들의 어린이날',
+  description: '제1회 뮤우어린이집 현장학습',
   generator: 'v0.app',
   icons: {
     icon: [
-      { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-      { url: '/favicon/favicon.ico', rel: 'shortcut icon' },
+      {
+        url: '/icon-light-32x32.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/icon-dark-32x32.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+      {
+        url: '/icon.png',
+        type: 'image/svg+xml',
+      },
     ],
-    apple: [
-      { url: '/favicon/apple-icon.png' },
-      { url: '/favicon/apple-icon-57x57.png', sizes: '57x57' },
-      { url: '/favicon/apple-icon-60x60.png', sizes: '60x60' },
-      { url: '/favicon/apple-icon-72x72.png', sizes: '72x72' },
-      { url: '/favicon/apple-icon-76x76.png', sizes: '76x76' },
-      { url: '/favicon/apple-icon-114x114.png', sizes: '114x114' },
-      { url: '/favicon/apple-icon-120x120.png', sizes: '120x120' },
-      { url: '/favicon/apple-icon-144x144.png', sizes: '144x144' },
-      { url: '/favicon/apple-icon-152x152.png', sizes: '152x152' },
-      { url: '/favicon/apple-icon-180x180.png', sizes: '180x180' },
-    ],
-    other: [
-      { rel: 'manifest', url: '/favicon/manifest.json' },
-    ],
+    apple: '/apple-icon.png',
   },
-}
+};
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   themeColor: '#fce7f3',
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="ko" className="bg-background">
@@ -71,5 +65,5 @@ export default function RootLayout({
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
-  )
+  );
 }

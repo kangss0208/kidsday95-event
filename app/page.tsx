@@ -1,113 +1,140 @@
-"use client"
+'use client';
 
-import { useState, useEffect, useCallback } from "react"
-import { SplashScreen } from "@/components/splash-screen"
-import { CountdownTimer } from "@/components/countdown-timer"
-import { TeacherIntro } from "@/components/teacher-intro"
-import { LoginScreen } from "@/components/login-screen"
-import { ChildDashboard } from "@/components/child-dashboard"
-import { TeacherDashboard } from "@/components/teacher-dashboard"
-import { Button } from "@/components/ui/button"
-import { getCurrentChild, getIsTeacher, getEventDate } from "@/lib/store"
-import { Users, Sparkles } from "lucide-react"
-import type { Child } from "@/lib/types"
+import { useState, useEffect, useCallback } from 'react';
+import { SplashScreen } from '@/components/splash-screen';
+import { CountdownTimer } from '@/components/countdown-timer';
+import { TeacherIntro } from '@/components/teacher-intro';
+import { LoginScreen } from '@/components/login-screen';
+import { ChildDashboard } from '@/components/child-dashboard';
+import { TeacherDashboard } from '@/components/teacher-dashboard';
+import { Button } from '@/components/ui/button';
+import { getCurrentChild, getIsTeacher, getEventDate } from '@/lib/store';
+import { Users, Sparkles } from 'lucide-react';
+import type { Child } from '@/lib/types';
 
 // Default fallback — actual value is loaded from store on mount (see useEffect)
-const DEFAULT_EVENT_DATE = new Date('2026-04-20T10:00:00')
+const DEFAULT_EVENT_DATE = new Date('2026-04-20T10:00:00');
 
-type AppScreen = 'splash' | 'pre-event' | 'login' | 'teacher-login' | 'child-dashboard' | 'teacher-dashboard'
+type AppScreen = 'splash' | 'pre-event' | 'login' | 'teacher-login' | 'child-dashboard' | 'teacher-dashboard';
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<AppScreen>('splash')
-  const [showTeacherIntro, setShowTeacherIntro] = useState(false)
-  const [currentChild, setCurrentChildState] = useState<Child | null>(null)
-  const [isTeacher, setIsTeacherState] = useState(false)
-  const [isEventStarted, setIsEventStarted] = useState(false)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [eventDate, setEventDateState] = useState<Date>(DEFAULT_EVENT_DATE)
+  const [currentScreen, setCurrentScreen] = useState<AppScreen>('splash');
+  const [screenStack, setScreenStack] = useState<AppScreen[]>([]);
+  const [showTeacherIntro, setShowTeacherIntro] = useState(false);
+  const [currentChild, setCurrentChildState] = useState<Child | null>(null);
+  const [isTeacher, setIsTeacherState] = useState(false);
+  const [isEventStarted, setIsEventStarted] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [eventDate, setEventDateState] = useState<Date>(DEFAULT_EVENT_DATE);
+
+  // push=true: 히스토리 추가 (스와이프백 가능), push=false: replace (스와이프백 불가)
+  const navigateTo = useCallback((screen: AppScreen, push = false) => {
+    setCurrentScreen(screen);
+    if (push) {
+      window.history.pushState({ screen }, '');
+      setScreenStack((prev) => [...prev, screen]);
+    } else {
+      window.history.replaceState({ screen }, '');
+      setScreenStack([screen]);
+    }
+  }, []);
+
+  // iOS 스와이프-백 / 브라우저 뒤로가기 처리
+  useEffect(() => {
+    const onPop = () => {
+      setScreenStack((prev) => {
+        if (prev.length <= 1) return prev;
+        const next = prev[prev.length - 2];
+        setCurrentScreen(next);
+        return prev.slice(0, -1);
+      });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // Load event date + check existing session on mount
   useEffect(() => {
-    let cancelled = false
-    ;(async () => {
+    let cancelled = false;
+    (async () => {
       try {
-        const storedDate = await getEventDate()
-        if (cancelled) return
-        setEventDateState(storedDate)
+        const storedDate = await getEventDate();
+        if (cancelled) return;
+        setEventDateState(storedDate);
         if (new Date() >= storedDate) {
-          setIsEventStarted(true)
+          setIsEventStarted(true);
         }
       } catch (err) {
-        console.error('Failed to load event date', err)
+        console.error('Failed to load event date', err);
       }
 
-      const child = getCurrentChild()
-      const teacher = getIsTeacher()
-      if (cancelled) return
+      const child = getCurrentChild();
+      const teacher = getIsTeacher();
+      if (cancelled) return;
       if (child) {
-        setCurrentChildState(child)
+        setCurrentChildState(child);
       } else if (teacher) {
-        setIsTeacherState(true)
+        setIsTeacherState(true);
       }
-      setIsLoaded(true)
-    })()
+      setIsLoaded(true);
+    })();
     return () => {
-      cancelled = true
-    }
-  }, [])
+      cancelled = true;
+    };
+  }, []);
 
   const handleSplashComplete = useCallback(() => {
-    const child = getCurrentChild()
-    const teacher = getIsTeacher()
+    const child = getCurrentChild();
+    const teacher = getIsTeacher();
 
     if (child) {
-      setCurrentChildState(child)
-      setCurrentScreen('child-dashboard')
+      setCurrentChildState(child);
+      navigateTo('child-dashboard');
     } else if (teacher) {
-      setIsTeacherState(true)
-      setCurrentScreen('teacher-dashboard')
+      setIsTeacherState(true);
+      navigateTo('teacher-dashboard');
     } else if (isEventStarted) {
-      setCurrentScreen('login')
+      navigateTo('login');
     } else {
-      setCurrentScreen('pre-event')
+      navigateTo('pre-event');
     }
-  }, [isEventStarted])
+  }, [isEventStarted, navigateTo]);
 
   const handleEventStart = useCallback(() => {
-    setIsEventStarted(true)
-  }, [])
+    setIsEventStarted(true);
+  }, []);
 
   const handleLoginSuccess = (isTeacherLogin: boolean) => {
     if (isTeacherLogin) {
-      setIsTeacherState(true)
-      setCurrentScreen('teacher-dashboard')
+      setIsTeacherState(true);
+      navigateTo('teacher-dashboard'); // replace: 대시보드에서 스와이프백으로 로그아웃 방지
     } else {
-      const child = getCurrentChild()
+      const child = getCurrentChild();
       if (child) {
-        setCurrentChildState(child)
-        setCurrentScreen('child-dashboard')
+        setCurrentChildState(child);
+        navigateTo('child-dashboard'); // replace
       }
     }
-  }
+  };
 
   const handleLogout = () => {
-    setCurrentChildState(null)
-    setIsTeacherState(false)
+    setCurrentChildState(null);
+    setIsTeacherState(false);
     if (isEventStarted) {
-      setCurrentScreen('login')
+      navigateTo('login');
     } else {
-      setCurrentScreen('pre-event')
+      navigateTo('pre-event');
     }
-  }
+  };
 
   // Don't render until loaded to avoid hydration mismatch
   if (!isLoaded) {
-    return null
+    return null;
   }
 
   // Splash screen
   if (currentScreen === 'splash') {
-    return <SplashScreen onComplete={handleSplashComplete} />
+    return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
   // Pre-event screen with countdown
@@ -115,37 +142,30 @@ export default function Home() {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-primary/10 via-background to-secondary/10">
         {/* Teacher Intro Modal */}
-        {showTeacherIntro && (
-          <TeacherIntro onClose={() => setShowTeacherIntro(false)} />
-        )}
+        {showTeacherIntro && <TeacherIntro onClose={() => setShowTeacherIntro(false)} />}
 
         {/* Header */}
         <div className="text-center pt-12 pb-8 px-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border-2 border-primary/20 mb-4">
             <Sparkles className="w-4 h-4 text-secondary-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">특별한 어린이 이벤트</span>
+            <span className="text-sm font-medium text-muted-foreground">제1회 뮤우어린이집 현장학습</span>
           </div>
           <h1 className="text-4xl font-extrabold">
-            <span className="text-primary">CARAT</span>
-            <span className="text-foreground ml-2">9559</span>
+            <span className="text-primary">95들과</span>
+            <span className="text-foreground ml-2">키링언니들</span>
           </h1>
-          <p className="text-muted-foreground mt-2">곧 시작됩니다!</p>
+          <p className="text-muted-foreground mt-2"></p>
         </div>
 
         {/* Countdown */}
         <div className="flex-1 flex flex-col justify-center">
-          <CountdownTimer
-            targetDate={eventDate}
-            eventName="이벤트 시작까지"
-            onEventStart={handleEventStart}
-          />
+          <CountdownTimer targetDate={eventDate} eventName="이벤트 시작까지" onEventStart={handleEventStart} />
 
           {/* Enter button - always visible */}
           <div className="mt-6 px-4">
             <Button
-              onClick={() => setCurrentScreen('login')}
-              className="w-full max-w-md mx-auto block h-14 rounded-2xl text-lg font-semibold"
-            >
+              onClick={() => navigateTo('login', true)} // push: 로그인에서 스와이프백 → pre-event
+              className="w-full max-w-md mx-auto block h-14 rounded-2xl text-lg font-semibold">
               {isEventStarted ? '입장하기' : '로그인하기'}
             </Button>
           </div>
@@ -156,14 +176,13 @@ export default function Home() {
           <Button
             variant="outline"
             onClick={() => setShowTeacherIntro(true)}
-            className="w-full h-12 rounded-2xl border-2"
-          >
+            className="w-full h-12 rounded-2xl border-2">
             <Users className="w-5 h-5 mr-2" />
             선생님 소개
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   // Login screen
@@ -172,38 +191,30 @@ export default function Home() {
       <LoginScreen
         onLoginSuccess={handleLoginSuccess}
         isEventStarted={isEventStarted}
-        onBack={!isEventStarted ? () => setCurrentScreen('pre-event') : undefined}
+        onBack={!isEventStarted ? () => navigateTo('pre-event') : undefined}
       />
-    )
+    );
   }
 
   // Teacher-only login screen (before event)
   if (currentScreen === 'teacher-login') {
-    return (
-      <LoginScreen
-        onLoginSuccess={handleLoginSuccess}
-        teacherOnly
-        onBack={() => setCurrentScreen('pre-event')}
-      />
-    )
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} teacherOnly onBack={() => navigateTo('pre-event')} />;
   }
 
   // Child dashboard
   if (currentScreen === 'child-dashboard' && currentChild) {
-    return <ChildDashboard child={currentChild} onLogout={handleLogout} />
+    return <ChildDashboard child={currentChild} onLogout={handleLogout} />;
   }
 
   // Teacher dashboard
   if (currentScreen === 'teacher-dashboard' && isTeacher) {
-    return <TeacherDashboard onLogout={handleLogout} />
+    return <TeacherDashboard onLogout={handleLogout} />;
   }
 
   // Fallback - should not happen
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <Button onClick={() => setCurrentScreen('splash')}>
-        다시 시작
-      </Button>
+      <Button onClick={() => navigateTo('splash')}>다시 시작</Button>
     </div>
-  )
+  );
 }
