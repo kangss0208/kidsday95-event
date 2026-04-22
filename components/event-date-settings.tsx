@@ -232,14 +232,14 @@ export function EventDateSettings() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 min-w-0 space-y-1">
               <label className="text-xs font-medium text-muted-foreground">날짜</label>
-              <Input type="date" value={dateInput} onChange={(e) => { setDateInput(e.target.value); setSaveMessage('') }} className="rounded-xl h-12" />
+              <Input type="date" value={dateInput} onChange={(e) => { setDateInput(e.target.value); setSaveMessage('') }} className="rounded-xl h-12 w-full" />
             </div>
-            <div className="space-y-1">
+            <div className="flex-1 min-w-0 space-y-1">
               <label className="text-xs font-medium text-muted-foreground">시간</label>
-              <Input type="time" value={timeInput} onChange={(e) => { setTimeInput(e.target.value); setSaveMessage('') }} className="rounded-xl h-12" />
+              <Input type="time" value={timeInput} onChange={(e) => { setTimeInput(e.target.value); setSaveMessage('') }} className="rounded-xl h-12 w-full" />
             </div>
           </div>
 

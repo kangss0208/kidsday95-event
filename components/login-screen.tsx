@@ -133,7 +133,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
 
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            💖어린이 여러분💖
+            🩷어린이 여러분🩵
           </h1>
           <p className="text-muted-foreground">선생님 메뉴에 들어가면 안돼요</p>
         </div>
