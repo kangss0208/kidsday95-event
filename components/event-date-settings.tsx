@@ -120,48 +120,87 @@ export function EventDateSettings() {
     }
   }
 
-  // 카카오맵 picker 초기화: current(이벤트 날짜) 로드 후 DOM이 렌더되면 한 번만 실행
+  // 카카오맵 picker 초기화
   useEffect(() => {
-    if (!current || pickerInitedRef.current) return
+    if (!current) return
     const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY
-    if (!apiKey) return
+    if (!apiKey) {
+      console.warn('[picker] NEXT_PUBLIC_KAKAO_MAP_KEY is not set')
+      return
+    }
+    console.log('[picker] init effect fired', { apiKey: !!apiKey, hasKakao: !!(window as any).kakao?.maps })
 
     const initCenter = meetingPoints[0]
       ? { lat: meetingPoints[0].lat, lng: meetingPoints[0].lng }
       : { lat: 37.5665, lng: 126.9780 }
 
+    let destroyed = false
+
     function initMap() {
-      if (!pickerMapRef.current || pickerInitedRef.current) return
-      const kakao = (window as any).kakao
-      const center = new kakao.maps.LatLng(initCenter.lat, initCenter.lng)
-      const map = new kakao.maps.Map(pickerMapRef.current, { center, level: 3 })
-      pickerMapInstanceRef.current = map
-      pickerInitedRef.current = true
+      if (destroyed) return
+      if (!pickerMapRef.current) {
+        console.warn('[picker] pickerMapRef.current is null at init time')
+        return
+      }
+      try {
+        const kakao = (window as any).kakao
+        const center = new kakao.maps.LatLng(initCenter.lat, initCenter.lng)
+        const map = new kakao.maps.Map(pickerMapRef.current, { center, level: 3 })
+        pickerMapInstanceRef.current = map
+        console.log('[picker] map created successfully')
 
-      kakao.maps.event.addListener(map, 'click', (e: any) => {
-        const latlng = e.latLng
-        const lat = latlng.getLat()
-        const lng = latlng.getLng()
-        if (pickerMarkerRef.current) {
-          pickerMarkerRef.current.setPosition(latlng)
-        } else {
-          pickerMarkerRef.current = new kakao.maps.Marker({ position: latlng, map })
-        }
-        setPickedCoords({ lat, lng })
-        setPointError('')
-      })
+        kakao.maps.event.addListener(map, 'click', (e: any) => {
+          const latlng = e.latLng
+          const lat = latlng.getLat()
+          const lng = latlng.getLng()
+          if (pickerMarkerRef.current) {
+            pickerMarkerRef.current.setPosition(latlng)
+          } else {
+            pickerMarkerRef.current = new kakao.maps.Marker({ position: latlng, map })
+          }
+          setPickedCoords({ lat, lng })
+          setPointError('')
+        })
+      } catch (err) {
+        console.error('[picker] initMap threw', err)
+      }
     }
 
-    if ((window as any).kakao?.maps) {
+    const w = window as any
+    if (w.kakao?.maps?.LatLng) {
+      // SDK 이미 완전히 로드됨
       initMap()
-      return
+    } else if (w.kakao?.maps?.load) {
+      // 스크립트는 있지만 load()가 아직 안 된 상태
+      console.log('[picker] calling kakao.maps.load()')
+      w.kakao.maps.load(initMap)
+    } else {
+      console.log('[picker] injecting SDK script')
+      const existing = document.querySelector<HTMLScriptElement>('script[data-kakao-sdk]')
+      if (existing) {
+        existing.addEventListener('load', () => w.kakao.maps.load(initMap))
+      } else {
+        const script = document.createElement('script')
+        script.setAttribute('data-kakao-sdk', '1')
+        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`
+        script.async = true
+        script.onload = () => {
+          console.log('[picker] SDK script onload')
+          w.kakao.maps.load(initMap)
+        }
+        script.onerror = (e) => console.error('[picker] SDK script failed to load', e)
+        document.head.appendChild(script)
+      }
     }
-    const script = document.createElement('script')
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`
-    script.async = true
-    script.onload = () => (window as any).kakao.maps.load(initMap)
-    document.head.appendChild(script)
-    // initCenter는 최초 1회만 반영(의도). meetingPoints 변경으로 재초기화 안 함.
+
+    return () => {
+      destroyed = true
+      pickerMapInstanceRef.current = null
+      if (pickerMarkerRef.current) {
+        try { pickerMarkerRef.current.setMap(null) } catch {}
+        pickerMarkerRef.current = null
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current])
 
@@ -258,7 +297,12 @@ export function EventDateSettings() {
             <p className="text-xs font-medium text-muted-foreground">장소 추가</p>
             <Input placeholder="장소 이름 (예: 서울역 10번 출구)" value={newName} onChange={e => { setNewName(e.target.value); setPointSaveMsg(''); setPointError('') }} className="rounded-xl h-11" />
 
-            <div ref={pickerMapRef} className="w-full aspect-video rounded-2xl overflow-hidden border-2 border-border" />
+            <div
+              ref={pickerMapRef}
+              className="w-full aspect-video min-h-[240px] rounded-2xl overflow-hidden border-2 border-border bg-muted/40 flex items-center justify-center text-xs text-muted-foreground"
+            >
+              지도 로딩 중...
+            </div>
 
             {pickedCoords ? (
               <p className="text-xs text-primary">
