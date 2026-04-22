@@ -45,6 +45,7 @@ export interface Post {
   authorName: string;
   createdAt: string;
   comments: Comment[];
+  imageUrl?: string;
 }
 
 export interface PrepItem {

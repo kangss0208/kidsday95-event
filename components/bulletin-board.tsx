@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,8 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  ImagePlus,
+  X,
 } from "lucide-react"
 import type { Post, AuthorRole } from "@/lib/types"
 import {
@@ -23,6 +25,7 @@ import {
   deletePost,
   addComment,
   deleteComment,
+  uploadPostImage,
 } from "@/lib/store"
 import { getSupabase } from "@/lib/supabase/client"
 import { childFontStack } from "@/lib/child-fonts"
@@ -48,6 +51,10 @@ export function BulletinBoard({ authorId, authorName, authorRole }: BulletinBoar
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [openPost, setOpenPost] = useState<string | null>(null)
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
 
@@ -78,21 +85,50 @@ export function BulletinBoard({ authorId, authorName, authorRole }: BulletinBoar
 
   const canPost = authorRole === 'teacher'
 
+  const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const handleImageRemove = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const resetForm = () => {
+    setTitle('')
+    setContent('')
+    handleImageRemove()
+    setShowForm(false)
+  }
+
   const handleCreate = async () => {
     if (!title.trim() || !content.trim()) return
+    setUploading(true)
     try {
+      let imageUrl: string | undefined
+      if (imageFile) {
+        imageUrl = await uploadPostImage(imageFile)
+      }
       const updated = await createPost({
         title: title.trim(),
         content: content.trim(),
         authorId,
         authorName,
+        imageUrl,
       })
       setPosts(updated)
-      setTitle('')
-      setContent('')
-      setShowForm(false)
+      resetForm()
     } catch (err) {
       console.error('Failed to create post', err)
+      const msg = err instanceof Error ? err.message : JSON.stringify(err)
+      alert('게시글 등록에 실패했어요.\n\n' + msg)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -167,21 +203,54 @@ export function BulletinBoard({ authorId, authorName, authorRole }: BulletinBoar
               onChange={(e) => setContent(e.target.value)}
               className="rounded-xl min-h-[120px]"
             />
+
+            {/* 이미지 첨부 (최대 1장) */}
+            <div className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImagePick}
+              />
+              {imagePreview ? (
+                <div className="relative rounded-xl overflow-hidden border-2 border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePreview} alt="첨부 이미지 미리보기" className="w-full max-h-64 object-contain" />
+                  <button
+                    type="button"
+                    onClick={handleImageRemove}
+                    className="absolute top-2 right-2 bg-background/90 rounded-full p-1.5 shadow hover:bg-background"
+                    aria-label="이미지 삭제"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full rounded-xl"
+                >
+                  <ImagePlus className="w-4 h-4 mr-2" />
+                  이미지 첨부 (선택)
+                </Button>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <Button
                 onClick={handleCreate}
-                disabled={!title.trim() || !content.trim()}
+                disabled={!title.trim() || !content.trim() || uploading}
                 className="flex-1 rounded-xl"
               >
-                등록하기
+                {uploading ? '등록 중...' : '등록하기'}
               </Button>
               <Button
                 variant="outline"
-                onClick={() => {
-                  setShowForm(false)
-                  setTitle('')
-                  setContent('')
-                }}
+                onClick={resetForm}
+                disabled={uploading}
                 className="rounded-xl"
               >
                 취소
@@ -252,6 +321,14 @@ export function BulletinBoard({ authorId, authorName, authorRole }: BulletinBoar
 
                   {isOpen && (
                     <div className="px-4 pb-4 border-t border-border pt-4 space-y-4">
+                      {post.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={post.imageUrl}
+                          alt="게시글 이미지"
+                          className="w-full rounded-2xl border border-border"
+                        />
+                      )}
                       <p className="text-sm text-foreground whitespace-pre-wrap">
                         {post.content}
                       </p>
@@ -281,11 +358,10 @@ export function BulletinBoard({ authorId, authorName, authorRole }: BulletinBoar
                           return (
                             <div
                               key={c.id}
-                              className={`p-3 rounded-xl ${
-                                c.authorRole === 'teacher'
+                              className={`p-3 rounded-xl ${c.authorRole === 'teacher'
                                   ? 'bg-secondary/20'
                                   : 'bg-primary/10'
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">

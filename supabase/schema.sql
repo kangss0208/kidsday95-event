@@ -41,8 +41,11 @@ create table if not exists posts (
   content text not null,
   author_id text not null,
   author_name text not null,
+  image_url text,
   created_at timestamptz not null default now()
 );
+-- 기존 테이블에 image_url 없으면 추가
+alter table posts add column if not exists image_url text;
 
 create table if not exists comments (
   id uuid primary key default gen_random_uuid(),
@@ -117,6 +120,26 @@ drop policy if exists open_all on prep_items;
 create policy open_all on prep_items for all using (true) with check (true);
 drop policy if exists open_all on app_settings;
 create policy open_all on app_settings for all using (true) with check (true);
+
+-- ── Storage: posts 버킷 + RLS 정책 ──────────────────────
+-- 게시판 이미지 업로드용 public 버킷
+insert into storage.buckets (id, name, public)
+values ('posts', 'posts', true)
+on conflict (id) do nothing;
+
+-- anon/authenticated 가 posts 버킷에 업로드/조회/삭제 가능
+drop policy if exists posts_read on storage.objects;
+create policy posts_read on storage.objects
+  for select using (bucket_id = 'posts');
+drop policy if exists posts_insert on storage.objects;
+create policy posts_insert on storage.objects
+  for insert with check (bucket_id = 'posts');
+drop policy if exists posts_update on storage.objects;
+create policy posts_update on storage.objects
+  for update using (bucket_id = 'posts') with check (bucket_id = 'posts');
+drop policy if exists posts_delete on storage.objects;
+create policy posts_delete on storage.objects
+  for delete using (bucket_id = 'posts');
 
 -- ── Realtime ──────────────────────────────────────────────
 -- 선생님이 미션 체크하면 어린이 화면도 즉시 갱신되도록

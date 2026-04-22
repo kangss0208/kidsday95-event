@@ -1,19 +1,10 @@
 export const CHILD_FONT_FAMILIES = [
-  'Gaegu',
-  'Dongle',
-  'Do Hyeon',
-  'Jua',
-  'Gamja Flower',
-  'Black Han Sans',
-  'Hi Melody',
-  'Yeon Sung',
-  'Single Day',
-  'Poor Story',
-  'Kirang Haerang',
-  'Nanum Pen Script',
-  'Nanum Brush Script',
-  'Cute Font',
-  'East Sea Dokdo',
+  'Kkubulim',
+  'GriunSimsim',
+  'Junwu',
+  'Kim',
+  'YoonManSeh',
+  'YoonMinGuk',
 ] as const;
 
 export function pickChildFont(key: string): string {
@@ -26,5 +17,5 @@ export function pickChildFont(key: string): string {
 }
 
 export function childFontStack(key: string): string {
-  return `'${pickChildFont(key)}', sans-serif`;
+  return `'${pickChildFont(key)}', 'Maplestory', sans-serif`;
 }

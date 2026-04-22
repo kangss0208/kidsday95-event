@@ -1,6 +1,66 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* ── Maplestory (default site font) ─────────────────────────── */
+@font-face {
+  font-family: 'Maplestory';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/font/NEXON_Maplestory/TTF/Maplestory%20Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Maplestory';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/font/NEXON_Maplestory/TTF/Maplestory%20Bold.ttf') format('truetype');
+}
+
+/* ── Child comment fonts (hash-based random per child) ──────── */
+@font-face {
+  font-family: 'Kkubulim';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font/cildren/BMKkubulimTTF.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'GriunSimsim';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font/cildren/Griun%EF%BC%BFSimsimche%EF%BC%8DRg.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Junwu';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font/cildren/junwu.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Kim';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font/cildren/kim.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'YoonManSeh';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font/cildren/YoonChildfundkoreaManSeh.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'YoonMinGuk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font/cildren/YoonChildfundkoreaMinGuk.ttf') format('truetype');
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -75,7 +135,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-sans), 'Nunito', sans-serif;
+  --font-sans: 'Maplestory', var(--font-sans), 'Nunito', sans-serif;
   --font-mono: var(--font-mono), 'Nunito Sans', sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);

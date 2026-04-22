@@ -122,6 +122,7 @@ type PostRow = {
   author_id: string;
   author_name: string;
   created_at: string;
+  image_url: string | null;
 };
 
 type CommentRow = {
@@ -309,8 +310,26 @@ export async function getPosts(): Promise<Post[]> {
     authorId: r.author_id,
     authorName: r.author_name,
     createdAt: r.created_at,
+    imageUrl: r.image_url ?? undefined,
     comments: commentsByPost.get(r.id) ?? [],
   }));
+}
+
+// 게시글 이미지를 Supabase Storage에 업로드하고 public URL 반환.
+// 사전 조건: Supabase에 'posts' 버킷이 public으로 존재하고 anon 업로드를 허용하는 storage policy가 있어야 함.
+// schema.sql 참고. 버킷 미생성 시 여기서 "Bucket not found" 에러로 즉시 확인 가능.
+export async function uploadPostImage(file: File): Promise<string> {
+  const sb = getSupabase();
+  const ext = file.name.split('.').pop() ?? 'jpg';
+  const path = `post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { error: uploadError } = await sb.storage
+    .from('posts')
+    .upload(path, file, { upsert: false });
+  if (uploadError) throw uploadError;
+
+  const { data } = sb.storage.from('posts').getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export async function createPost(input: {
@@ -318,12 +337,14 @@ export async function createPost(input: {
   content: string;
   authorId: string;
   authorName: string;
+  imageUrl?: string;
 }): Promise<Post[]> {
   const { error } = await getSupabase().from('posts').insert({
     title: input.title,
     content: input.content,
     author_id: input.authorId,
     author_name: input.authorName,
+    image_url: input.imageUrl ?? null,
   });
   if (error) throw error;
   return getPosts();
