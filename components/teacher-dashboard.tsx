@@ -180,8 +180,8 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
               <GraduationCap className="w-6 h-6 text-secondary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-foreground">선생님 관리자</h1>
-              <p className="text-sm text-muted-foreground">CARAT 9559</p>
+              <h1 className="font-bold text-foreground">선생님</h1>
+              <p className="text-sm text-muted-foreground"></p>
             </div>
           </div>
           <button
@@ -273,9 +273,8 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                                   <button
                                     key={mission.id}
                                     onClick={() => handleToggleMissionForChild(mission.id, child.id)}
-                                    className={`w-full flex items-center gap-2 p-2 rounded-xl transition-colors ${
-                                      isCompleted ? 'bg-primary/10' : 'bg-muted/50 hover:bg-muted'
-                                    }`}
+                                    className={`w-full flex items-center gap-2 p-2 rounded-xl transition-colors ${isCompleted ? 'bg-primary/10' : 'bg-muted/50 hover:bg-muted'
+                                      }`}
                                   >
                                     {isCompleted ? (
                                       <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
@@ -339,11 +338,10 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                           key={cls.name}
                           type="button"
                           onClick={() => toggleNewMissionClass(cls.name)}
-                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-colors ${
-                            selected
+                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-colors ${selected
                               ? 'border-primary bg-primary/10 text-primary'
                               : 'border-border text-muted-foreground hover:border-primary/40'
-                          }`}
+                            }`}
                         >
                           {cls.name}
                         </button>
@@ -442,9 +440,8 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
-                }`}
+                className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
                 <span className="text-[11px] mt-1 font-medium whitespace-nowrap">{label}</span>
@@ -453,9 +450,8 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
           })}
           <button
             onClick={() => setMoreOpen(true)}
-            className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
-              moreTabs.some(t => t.key === activeTab) ? 'text-primary' : 'text-muted-foreground'
-            }`}
+            className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${moreTabs.some(t => t.key === activeTab) ? 'text-primary' : 'text-muted-foreground'
+              }`}
           >
             <Menu className="w-5 h-5 transition-transform" />
             <span className="text-[11px] mt-1 font-medium">더보기</span>
@@ -476,11 +472,10 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                 <button
                   key={key}
                   onClick={() => { setActiveTab(key); setMoreOpen(false) }}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors ${
-                    isActive
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors ${isActive
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-muted/30 text-muted-foreground'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-6 h-6" />
                   <span className="text-xs font-semibold">{label}</span>

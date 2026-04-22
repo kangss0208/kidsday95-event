@@ -122,7 +122,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-primary/10 via-background to-secondary/10">
         {onBack && (
-          <button 
+          <button
             onClick={onBack}
             className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground"
           >
@@ -133,9 +133,9 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
 
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            환영합니다!
+            💖어린이 여러분💖
           </h1>
-          <p className="text-muted-foreground">누구신가요?</p>
+          <p className="text-muted-foreground">선생님 메뉴에 들어가면 안돼요</p>
         </div>
 
         <div className="w-full max-w-sm space-y-4">
@@ -147,14 +147,14 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
                   <Clock className="w-8 h-8 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg text-foreground">어린이</h3>
+                  {/* <h3 className="font-bold text-lg text-foreground">어린이</h3> */}
                   <p className="text-sm text-primary font-medium">조금만 기다려주세요!</p>
-                  <p className="text-xs text-muted-foreground mt-1">이벤트가 시작되면 입장할 수 있어요</p>
+                  <p className="text-xs text-muted-foreground mt-1">95의 어린이날에 오픈되요</p>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <Card 
+            <Card
               className="rounded-3xl border-2 border-primary/20 cursor-pointer hover:border-primary/40 hover:shadow-lg transition-all"
               onClick={() => { resetForm(); setMode('child-login') }}
             >
@@ -171,7 +171,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
             </Card>
           )}
 
-          <Card 
+          <Card
             className="rounded-3xl border-2 border-secondary/30 cursor-pointer hover:border-secondary/50 hover:shadow-lg transition-all"
             onClick={() => { resetForm(); setMode('teacher') }}
           >
@@ -193,7 +193,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
   if (mode === 'child-login') {
     return (
       <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-primary/10 via-background to-secondary/10">
-        <button 
+        <button
           onClick={() => setMode('select')}
           className="flex items-center gap-2 text-muted-foreground mb-6"
         >
@@ -273,7 +273,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
   if (mode === 'child-register') {
     return (
       <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-primary/10 via-background to-secondary/10">
-        <button 
+        <button
           onClick={() => setMode('child-login')}
           className="flex items-center gap-2 text-muted-foreground mb-6"
         >
@@ -348,7 +348,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
   // Teacher login
   return (
     <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-secondary/10 via-background to-primary/10">
-      <button 
+      <button
         onClick={() => setMode('select')}
         className="flex items-center gap-2 text-muted-foreground mb-6"
       >
@@ -362,7 +362,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
             <GraduationCap className="w-10 h-10 text-secondary-foreground" />
           </div>
           <h2 className="text-2xl font-bold text-foreground">선생님 로그인</h2>
-          <p className="text-muted-foreground mt-1">관리자 비밀번호를 입력해주세요</p>
+          <p className="text-muted-foreground mt-1">비밀번호를 입력해주세요</p>
         </div>
 
         <Card className="rounded-3xl border-2 border-secondary/30">
@@ -388,7 +388,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
               <p className="text-destructive text-sm text-center">{error}</p>
             )}
 
-            <Button 
+            <Button
               onClick={handleTeacherLogin}
               className="w-full h-12 rounded-xl text-lg font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/80"
             >

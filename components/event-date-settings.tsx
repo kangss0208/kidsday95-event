@@ -48,10 +48,12 @@ export function EventDateSettings() {
   // ── 집합 장소 ────────────────────────────────────────────────
   const [meetingPoints, setMeetingPoints] = useState<MeetingPoint[]>([])
   const [newName, setNewName] = useState('')
-  const [newLat, setNewLat] = useState('')
-  const [newLng, setNewLng] = useState('')
+  const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [pointSaveMsg, setPointSaveMsg] = useState('')
   const [pointError, setPointError] = useState('')
+  const pickerMapRef = useRef<HTMLDivElement>(null)
+  const pickerMapInstanceRef = useRef<any>(null)
+  const pickerMarkerRef = useRef<any>(null)
 
   // ── 동의서 업로드 ────────────────────────────────────────────
   const [consentUrl, setConsentUrl] = useState<string | null>(null)
@@ -103,26 +105,70 @@ export function EventDateSettings() {
   const handleAddPoint = async () => {
     setPointError('')
     setPointSaveMsg('')
-    const lat = parseFloat(newLat)
-    const lng = parseFloat(newLng)
     if (!newName.trim()) { setPointError('장소 이름을 입력해주세요'); return }
-    if (isNaN(lat) || isNaN(lng)) { setPointError('위도/경도를 올바르게 입력해주세요'); return }
+    if (!pickedCoords) { setPointError('지도를 눌러 위치를 선택해주세요'); return }
     const next: MeetingPoint[] = [
       ...meetingPoints,
-      { id: Date.now().toString(), name: newName.trim(), lat, lng },
+      { id: Date.now().toString(), name: newName.trim(), lat: pickedCoords.lat, lng: pickedCoords.lng },
     ]
     try {
       await saveMeetingPoints(next)
       setMeetingPoints(next)
       setNewName('')
-      setNewLat('')
-      setNewLng('')
+      setPickedCoords(null)
+      if (pickerMarkerRef.current) {
+        pickerMarkerRef.current.setMap(null)
+        pickerMarkerRef.current = null
+      }
       setPointSaveMsg('장소가 추가되었어요!')
     } catch (err) {
       console.error('Failed to save meeting points', err)
       setPointError('저장 중 오류가 발생했어요.')
     }
   }
+
+  // 카카오맵 picker 초기화 (meetingPoints 처음 로드되면 center 결정)
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY
+    if (!apiKey || !pickerMapRef.current) return
+
+    const initCenter = meetingPoints[0]
+      ? { lat: meetingPoints[0].lat, lng: meetingPoints[0].lng }
+      : { lat: 37.5665, lng: 126.9780 }
+
+    function initMap() {
+      if (!pickerMapRef.current) return
+      const kakao = (window as any).kakao
+      const center = new kakao.maps.LatLng(initCenter.lat, initCenter.lng)
+      const map = new kakao.maps.Map(pickerMapRef.current, { center, level: 3 })
+      pickerMapInstanceRef.current = map
+
+      kakao.maps.event.addListener(map, 'click', (e: any) => {
+        const latlng = e.latLng
+        const lat = latlng.getLat()
+        const lng = latlng.getLng()
+        if (pickerMarkerRef.current) {
+          pickerMarkerRef.current.setPosition(latlng)
+        } else {
+          pickerMarkerRef.current = new kakao.maps.Marker({ position: latlng, map })
+        }
+        setPickedCoords({ lat, lng })
+        setPointError('')
+      })
+    }
+
+    if ((window as any).kakao?.maps) {
+      initMap()
+      return
+    }
+    const script = document.createElement('script')
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`
+    script.async = true
+    script.onload = () => (window as any).kakao.maps.load(initMap)
+    document.head.appendChild(script)
+    // meetingPoints 참조는 첫 초기화 시점 값만 사용 (의도된 동작)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meetingPoints.length > 0])
 
   const handleDeletePoint = async (id: string) => {
     const next = meetingPoints.filter(p => p.id !== id)
@@ -236,10 +282,17 @@ export function EventDateSettings() {
           <div className="space-y-2 pt-2 border-t border-border">
             <p className="text-xs font-medium text-muted-foreground">장소 추가</p>
             <Input placeholder="장소 이름 (예: 서울역 10번 출구)" value={newName} onChange={e => { setNewName(e.target.value); setPointSaveMsg(''); setPointError('') }} className="rounded-xl h-11" />
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="위도 (예: 37.5544)" value={newLat} onChange={e => setNewLat(e.target.value)} className="rounded-xl h-11" />
-              <Input placeholder="경도 (예: 126.9717)" value={newLng} onChange={e => setNewLng(e.target.value)} className="rounded-xl h-11" />
-            </div>
+
+            <div ref={pickerMapRef} className="w-full aspect-video rounded-2xl overflow-hidden border-2 border-border" />
+
+            {pickedCoords ? (
+              <p className="text-xs text-primary">
+                선택된 좌표: {pickedCoords.lat.toFixed(6)}, {pickedCoords.lng.toFixed(6)}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">지도를 눌러 위치를 선택해주세요.</p>
+            )}
+
             {pointError && <p className="text-destructive text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" />{pointError}</p>}
             {pointSaveMsg && <p className="text-primary text-sm flex items-center gap-1"><CheckCircle2 className="w-4 h-4" />{pointSaveMsg}</p>}
             <Button onClick={handleAddPoint} className="w-full rounded-xl h-11" variant="outline">

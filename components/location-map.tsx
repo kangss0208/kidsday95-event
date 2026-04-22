@@ -28,16 +28,16 @@ export function LocationMap({ childId }: Props) {
   // 아이 ID 해시로 집합 장소 고정 배정
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      try {
-        const points = await getMeetingPoints()
-        if (points.length > 0 && !cancelled) {
-          const hash = parseInt(childId.replace(/-/g, '').slice(0, 8), 16)
-          const p = points[hash % points.length]
-          setLocation({ name: p.name, lat: p.lat, lng: p.lng })
-        }
-      } catch {}
-    })()
+      ; (async () => {
+        try {
+          const points = await getMeetingPoints()
+          if (points.length > 0 && !cancelled) {
+            const hash = parseInt(childId.replace(/-/g, '').slice(0, 8), 16)
+            const p = points[hash % points.length]
+            setLocation({ name: p.name, lat: p.lat, lng: p.lng })
+          }
+        } catch { }
+      })()
     return () => { cancelled = true }
   }, [childId])
 
@@ -125,26 +125,26 @@ export function LocationMap({ childId }: Props) {
         <div className="grid grid-cols-3 gap-2">
           <button
             onClick={openKakaoMap}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-colors"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-colors cursor-pointer"
             style={{ background: '#FEE50020', borderColor: '#FEE50080' }}
           >
-            <span className="text-2xl leading-none">🟡</span>
+            <img src="/kakao_map.png" alt="카카오맵" className="block w-[30%]" />
             <span className="text-xs font-semibold text-foreground">카카오맵</span>
           </button>
           <button
             onClick={openNaverMap}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-colors"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-colors cursor-pointer"
             style={{ background: '#03C75A20', borderColor: '#03C75A80' }}
           >
-            <span className="text-2xl leading-none">🟢</span>
+            <img src="/naver_map.png" alt="네이버맵" className="block w-[30%]" />
             <span className="text-xs font-semibold text-foreground">네이버맵</span>
           </button>
           <button
             onClick={openGoogleMap}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-colors"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-colors cursor-pointer"
             style={{ background: '#4285F420', borderColor: '#4285F480' }}
           >
-            <span className="text-2xl leading-none">🔵</span>
+            <img src="/google_map.png" alt="구글맵" className="block w-[30%]" />
             <span className="text-xs font-semibold text-foreground">구글맵</span>
           </button>
         </div>

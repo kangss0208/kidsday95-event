@@ -15,7 +15,7 @@ const teachers = [
     name: "강금쪽",
     title: "선생님",
     className: "논랑해",
-    message: "함께 꿈을 키워가요!",
+    message: "야무지게 놀아보자",
     color: "bg-secondary/40",
   },
   {
@@ -47,8 +47,8 @@ export function TeacherIntro({ onClose }: TeacherIntroProps) {
 
           <div className="space-y-4">
             {teachers.map((teacher, index) => (
-              <Card 
-                key={teacher.name} 
+              <Card
+                key={teacher.name}
                 className="rounded-3xl border-2 border-primary/10 overflow-hidden"
               >
                 <CardContent className="p-0">
