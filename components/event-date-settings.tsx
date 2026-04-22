@@ -54,6 +54,7 @@ export function EventDateSettings() {
   const pickerMapRef = useRef<HTMLDivElement>(null)
   const pickerMapInstanceRef = useRef<any>(null)
   const pickerMarkerRef = useRef<any>(null)
+  const pickerInitedRef = useRef(false)
 
   // ── 동의서 업로드 ────────────────────────────────────────────
   const [consentUrl, setConsentUrl] = useState<string | null>(null)
@@ -127,21 +128,23 @@ export function EventDateSettings() {
     }
   }
 
-  // 카카오맵 picker 초기화 (meetingPoints 처음 로드되면 center 결정)
+  // 카카오맵 picker 초기화: current(이벤트 날짜) 로드 후 DOM이 렌더되면 한 번만 실행
   useEffect(() => {
+    if (!current || pickerInitedRef.current) return
     const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY
-    if (!apiKey || !pickerMapRef.current) return
+    if (!apiKey) return
 
     const initCenter = meetingPoints[0]
       ? { lat: meetingPoints[0].lat, lng: meetingPoints[0].lng }
       : { lat: 37.5665, lng: 126.9780 }
 
     function initMap() {
-      if (!pickerMapRef.current) return
+      if (!pickerMapRef.current || pickerInitedRef.current) return
       const kakao = (window as any).kakao
       const center = new kakao.maps.LatLng(initCenter.lat, initCenter.lng)
       const map = new kakao.maps.Map(pickerMapRef.current, { center, level: 3 })
       pickerMapInstanceRef.current = map
+      pickerInitedRef.current = true
 
       kakao.maps.event.addListener(map, 'click', (e: any) => {
         const latlng = e.latLng
@@ -166,9 +169,9 @@ export function EventDateSettings() {
     script.async = true
     script.onload = () => (window as any).kakao.maps.load(initMap)
     document.head.appendChild(script)
-    // meetingPoints 참조는 첫 초기화 시점 값만 사용 (의도된 동작)
+    // initCenter는 최초 1회만 반영(의도). meetingPoints 변경으로 재초기화 안 함.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meetingPoints.length > 0])
+  }, [current])
 
   const handleDeletePoint = async (id: string) => {
     const next = meetingPoints.filter(p => p.id !== id)
