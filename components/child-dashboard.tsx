@@ -16,19 +16,17 @@ import {
   MessageSquare,
   Backpack,
   Navigation,
-  FileText,
-  Download,
   Menu,
 } from "lucide-react"
 import type { Child, Mission, ClassInfo } from "@/lib/types"
-import { getMissions, getClasses, logout, getConsentFormUrl } from "@/lib/store"
+import { getMissions, getClasses, logout } from "@/lib/store"
 import { getSupabase } from "@/lib/supabase/client"
 import { BulletinBoard } from "@/components/bulletin-board"
 import { PrepGuide } from "@/components/prep-guide"
 import { LocationMap } from "@/components/location-map"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
-type Tab = 'info' | 'class' | 'location' | 'missions' | 'bulletin' | 'prep' | 'application'
+type Tab = 'info' | 'class' | 'location' | 'missions' | 'bulletin' | 'prep'
 
 interface ChildDashboardProps {
   child: Child
@@ -40,17 +38,15 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
   const [moreOpen, setMoreOpen] = useState(false)
   const [missions, setMissions] = useState<Mission[]>([])
   const [classes, setClasses] = useState<ClassInfo[]>([])
-  const [consentFormUrl, setConsentFormUrl] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       try {
-        const [m, c, url] = await Promise.all([getMissions(), getClasses(), getConsentFormUrl()])
+        const [m, c] = await Promise.all([getMissions(), getClasses()])
         if (!cancelled) {
           setMissions(m)
           setClasses(c)
-          setConsentFormUrl(url)
         }
       } catch (err) {
         console.error('Failed to load child dashboard data', err)
@@ -92,7 +88,6 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
   const moreTabs = [
     { id: 'class' as Tab, label: '우리 반', icon: Users },
     { id: 'prep' as Tab, label: '준비물', icon: Backpack },
-    { id: 'application' as Tab, label: '신청서', icon: FileText },
   ]
 
   return (
@@ -380,46 +375,6 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
         )}
 
         {activeTab === 'prep' && <PrepGuide />}
-
-        {activeTab === 'application' && (
-          <div className="space-y-4">
-            <Card className="rounded-3xl border-2 border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  현장학습 동의서
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {consentFormUrl ? (
-                  <div className="space-y-4">
-                    <img
-                      src={consentFormUrl}
-                      alt="현장학습 동의서"
-                      className="w-full rounded-2xl border border-border"
-                    />
-                    <a
-                      href={consentFormUrl}
-                      download
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
-                    >
-                      <Download className="w-4 h-4" />
-                      다운로드
-                    </a>
-                  </div>
-                ) : (
-                  <div className="py-8 text-center space-y-2">
-                    <FileText className="w-12 h-12 text-muted-foreground mx-auto" />
-                    <p className="font-semibold text-foreground">아직 동의서가 없어요</p>
-                    <p className="text-sm text-muted-foreground">선생님이 곧 올려주실 거예요!</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
 
       {/* Bottom Navigation */}

@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Calendar, Clock, Settings, CheckCircle2, AlertCircle, MapPin, Trash2, Plus, FileText, Upload } from "lucide-react"
-import { getEventDate, setEventDate, getMeetingPoints, saveMeetingPoints, getConsentFormUrl, uploadConsentForm } from "@/lib/store"
+import { Calendar, Clock, Settings, CheckCircle2, AlertCircle, MapPin, Trash2, Plus } from "lucide-react"
+import { getEventDate, setEventDate, getMeetingPoints, saveMeetingPoints } from "@/lib/store"
 import type { MeetingPoint } from "@/lib/types"
 
 function pad(n: number): string {
@@ -56,24 +56,16 @@ export function EventDateSettings() {
   const pickerMarkerRef = useRef<any>(null)
   const pickerInitedRef = useRef(false)
 
-  // ── 동의서 업로드 ────────────────────────────────────────────
-  const [consentUrl, setConsentUrl] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [uploadMsg, setUploadMsg] = useState('')
-  const [uploadError, setUploadError] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       try {
-        const [d, points, url] = await Promise.all([getEventDate(), getMeetingPoints(), getConsentFormUrl()])
+        const [d, points] = await Promise.all([getEventDate(), getMeetingPoints()])
         if (cancelled) return
         setCurrent(d)
         setDateInput(toDateInput(d))
         setTimeInput(toTimeInput(d))
         setMeetingPoints(points)
-        setConsentUrl(url)
       } catch (err) {
         console.error('Failed to load settings', err)
       }
@@ -183,26 +175,6 @@ export function EventDateSettings() {
     }
   }
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    setUploadMsg('')
-    setUploadError('')
-    try {
-      const url = await uploadConsentForm(file)
-      setConsentUrl(url)
-      setUploadMsg('동의서가 업로드되었어요!')
-    } catch (err) {
-      console.error('Failed to upload consent form', err)
-      const msg = err instanceof Error ? err.message : JSON.stringify(err)
-      setUploadError('업로드 실패: ' + msg)
-    } finally {
-      setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
   if (!current) return null
 
   const hasChanges = dateInput !== toDateInput(current) || timeInput !== toTimeInput(current)
@@ -306,31 +278,6 @@ export function EventDateSettings() {
         </CardContent>
       </Card>
 
-      {/* 동의서 업로드 */}
-      <Card className="rounded-3xl border-2 border-primary/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-primary" />
-            현장학습 동의서 양식
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-xs text-muted-foreground">업로드한 이미지가 아이들의 '신청서' 탭에 표시됩니다.</p>
-
-          {consentUrl && (
-            <img src={consentUrl} alt="현재 동의서" className="w-full rounded-2xl border border-border" />
-          )}
-
-          {uploadError && <p className="text-destructive text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" />{uploadError}</p>}
-          {uploadMsg && <p className="text-primary text-sm flex items-center gap-1"><CheckCircle2 className="w-4 h-4" />{uploadMsg}</p>}
-
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-full rounded-xl h-12">
-            <Upload className="w-4 h-4 mr-2" />
-            {uploading ? '업로드 중...' : consentUrl ? '다시 업로드' : '동의서 업로드'}
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   )
 }
