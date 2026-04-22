@@ -9,6 +9,7 @@ import type {
   Comment,
   AuthorRole,
   PrepGuide,
+  MeetingPoint,
 } from './types';
 
 // ─── Session (stays in localStorage — per-device) ─────────────
@@ -84,6 +85,7 @@ type MissionRow = {
   id: string;
   title: string;
   description: string;
+  location: string | null;
   class_names: string[];
   created_at: string;
 };
@@ -191,6 +193,7 @@ export async function getMissions(): Promise<Mission[]> {
     id: r.id,
     title: r.title,
     description: r.description,
+    location: r.location ?? undefined,
     classNames: r.class_names ?? [],
     completed: false,
     completedBy: byMission.get(r.id) ?? [],
@@ -200,11 +203,13 @@ export async function getMissions(): Promise<Mission[]> {
 export async function createMission(input: {
   title: string;
   description: string;
+  location?: string;
   classNames: string[];
 }): Promise<Mission[]> {
   const { error } = await getSupabase().from('missions').insert({
     title: input.title,
     description: input.description,
+    location: input.location || null,
     class_names: input.classNames,
   });
   if (error) throw error;
@@ -401,4 +406,67 @@ export async function setEventDate(d: Date): Promise<void> {
     .from('app_settings')
     .upsert({ key: 'event_date', value: d.toISOString(), updated_at: new Date().toISOString() });
   if (error) throw error;
+}
+
+// ─── Meeting Points (app_settings) ────────────────────────────
+
+export async function getMeetingPoints(): Promise<MeetingPoint[]> {
+  const { data, error } = await getSupabase()
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'meeting_points')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.value) return [];
+  try {
+    return JSON.parse(data.value as string) as MeetingPoint[];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveMeetingPoints(points: MeetingPoint[]): Promise<void> {
+  const { error } = await getSupabase()
+    .from('app_settings')
+    .upsert({ key: 'meeting_points', value: JSON.stringify(points), updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
+// ─── Consent Form (app_settings + Storage) ────────────────────
+
+export async function getConsentFormUrl(): Promise<string | null> {
+  const { data, error } = await getSupabase()
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'consent_form_url')
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.value as string | undefined) ?? null;
+}
+
+export async function uploadConsentForm(file: File): Promise<string> {
+  const sb = getSupabase();
+  const ext = file.name.split('.').pop() ?? 'jpg';
+  const path = `consent-form.${ext}`;
+
+  // 버킷 없으면 자동 생성
+  const { data: buckets } = await sb.storage.listBuckets();
+  if (!buckets?.find(b => b.name === 'documents')) {
+    await sb.storage.createBucket('documents', { public: true });
+  }
+
+  const { error: uploadError } = await sb
+    .storage
+    .from('documents')
+    .upload(path, file, { upsert: true });
+  if (uploadError) throw uploadError;
+
+  const { data } = sb.storage.from('documents').getPublicUrl(path);
+  const url = data.publicUrl;
+
+  const { error } = await getSupabase()
+    .from('app_settings')
+    .upsert({ key: 'consent_form_url', value: url, updated_at: new Date().toISOString() });
+  if (error) throw error;
+  return url;
 }

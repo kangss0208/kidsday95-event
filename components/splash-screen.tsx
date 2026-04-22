@@ -66,13 +66,13 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           </div>
           
           <div className="bg-card rounded-3xl px-10 py-8 shadow-xl border-4 border-primary/30">
-            <h1 className="text-5xl font-extrabold tracking-tight">
-              <span className="text-primary">CARAT</span>
-              <span className="text-secondary-foreground ml-2">9559</span>
-            </h1>
-            <p className="text-muted-foreground mt-3 text-lg font-medium">
-              특별한 어린이 이벤트
+            <p className="text-muted-foreground text-base font-medium mb-2">
+              제1회 뮤우어린이집 현장학습
             </p>
+            <h1 className="text-4xl font-extrabold tracking-tight">
+              <span className="text-primary">95들과</span>
+              <span className="text-secondary-foreground ml-2">키링언니들</span>
+            </h1>
           </div>
         </div>
       </div>

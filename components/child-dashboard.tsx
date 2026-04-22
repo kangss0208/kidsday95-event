@@ -15,14 +15,20 @@ import {
   Sparkles,
   MessageSquare,
   Backpack,
+  Navigation,
+  FileText,
+  Download,
+  Menu,
 } from "lucide-react"
 import type { Child, Mission, ClassInfo } from "@/lib/types"
-import { getMissions, getClasses, logout } from "@/lib/store"
+import { getMissions, getClasses, logout, getConsentFormUrl } from "@/lib/store"
 import { getSupabase } from "@/lib/supabase/client"
 import { BulletinBoard } from "@/components/bulletin-board"
 import { PrepGuide } from "@/components/prep-guide"
+import { LocationMap } from "@/components/location-map"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
-type Tab = 'info' | 'class' | 'location' | 'missions' | 'bulletin' | 'prep'
+type Tab = 'info' | 'class' | 'location' | 'missions' | 'bulletin' | 'prep' | 'application'
 
 interface ChildDashboardProps {
   child: Child
@@ -30,18 +36,21 @@ interface ChildDashboardProps {
 }
 
 export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('info')
+  const [activeTab, setActiveTab] = useState<Tab>('missions')
+  const [moreOpen, setMoreOpen] = useState(false)
   const [missions, setMissions] = useState<Mission[]>([])
   const [classes, setClasses] = useState<ClassInfo[]>([])
+  const [consentFormUrl, setConsentFormUrl] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       try {
-        const [m, c] = await Promise.all([getMissions(), getClasses()])
+        const [m, c, url] = await Promise.all([getMissions(), getClasses(), getConsentFormUrl()])
         if (!cancelled) {
           setMissions(m)
           setClasses(c)
+          setConsentFormUrl(url)
         }
       } catch (err) {
         console.error('Failed to load child dashboard data', err)
@@ -73,13 +82,17 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
     onLogout()
   }
 
-  const tabs = [
+  const mainTabs = [
     { id: 'info' as Tab, label: '내 정보', icon: User },
-    { id: 'class' as Tab, label: '우리 반', icon: Users },
-    { id: 'location' as Tab, label: '만나는 곳', icon: MapPin },
     { id: 'missions' as Tab, label: '미션', icon: ListTodo },
     { id: 'bulletin' as Tab, label: '게시판', icon: MessageSquare },
+    { id: 'location' as Tab, label: '만나는 곳', icon: MapPin },
+  ]
+
+  const moreTabs = [
+    { id: 'class' as Tab, label: '우리 반', icon: Users },
     { id: 'prep' as Tab, label: '준비물', icon: Backpack },
+    { id: 'application' as Tab, label: '신청서', icon: FileText },
   ]
 
   return (
@@ -233,28 +246,7 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl flex items-center justify-center mb-4">
-                  <div className="text-center">
-                    <MapPin className="w-12 h-12 text-primary mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">지도 영역</p>
-                  </div>
-                </div>
-
-                {isUnassigned ? (
-                  <div className="p-4 rounded-2xl bg-muted/50 border-2 border-dashed border-border text-center">
-                    <p className="font-bold text-foreground mb-1">반 배정 후 안내돼요</p>
-                    <p className="text-sm text-muted-foreground">
-                      선생님이 반을 정해주시면 집합 장소를 볼 수 있어요.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-2xl bg-accent/30 border-2 border-accent">
-                    <p className="font-bold text-foreground mb-1">{child.className} 집합 장소</p>
-                    <p className="text-muted-foreground">
-                      {myClass?.meetingLocation || '1층 로비'}
-                    </p>
-                  </div>
-                )}
+                <LocationMap childId={child.id} />
               </CardContent>
             </Card>
           </div>
@@ -321,6 +313,55 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                         <p className="text-sm text-muted-foreground mt-1">
                           {mission.description}
                         </p>
+                        {mission.location && (
+                          <div className="mt-2 space-y-1.5">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5 text-primary" />
+                              <p className="text-xs font-medium text-primary">{mission.location}</p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <button
+                                onClick={() => {
+                                  const q = encodeURIComponent(mission.location!)
+                                  const iframe = document.createElement('iframe')
+                                  iframe.style.display = 'none'
+                                  iframe.src = `kakaomap://search?q=${q}`
+                                  document.body.appendChild(iframe)
+                                  const t = setTimeout(() => window.open(`https://map.kakao.com/link/search/${q}`, '_blank'), 1500)
+                                  window.addEventListener('blur', () => clearTimeout(t), { once: true })
+                                  setTimeout(() => document.body.removeChild(iframe), 2000)
+                                }}
+                                className="px-4 py-2 rounded-xl text-[13px] font-semibold border transition-colors"
+                                style={{ background: '#FEE50030', borderColor: '#FEE50099', color: '#7a6000' }}
+                              >
+                                카카오맵
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const q = encodeURIComponent(mission.location!)
+                                  const iframe = document.createElement('iframe')
+                                  iframe.style.display = 'none'
+                                  iframe.src = `nmap://search?query=${q}&appname=kr.co.caratEvent`
+                                  document.body.appendChild(iframe)
+                                  const t = setTimeout(() => window.open(`https://map.naver.com/p/search/${q}`, '_blank'), 1500)
+                                  window.addEventListener('blur', () => clearTimeout(t), { once: true })
+                                  setTimeout(() => document.body.removeChild(iframe), 2000)
+                                }}
+                                className="px-4 py-2 rounded-xl text-[13px] font-semibold border transition-colors"
+                                style={{ background: '#03C75A20', borderColor: '#03C75A80', color: '#016632' }}
+                              >
+                                네이버맵
+                              </button>
+                              <button
+                                onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(mission.location!)}`, '_blank')}
+                                className="px-4 py-2 rounded-xl text-[13px] font-semibold border transition-colors"
+                                style={{ background: '#4285F420', borderColor: '#4285F480', color: '#1a3a6e' }}
+                              >
+                                구글맵
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -339,19 +380,59 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
         )}
 
         {activeTab === 'prep' && <PrepGuide />}
+
+        {activeTab === 'application' && (
+          <div className="space-y-4">
+            <Card className="rounded-3xl border-2 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
+                  현장학습 동의서
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {consentFormUrl ? (
+                  <div className="space-y-4">
+                    <img
+                      src={consentFormUrl}
+                      alt="현장학습 동의서"
+                      className="w-full rounded-2xl border border-border"
+                    />
+                    <a
+                      href={consentFormUrl}
+                      download
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      다운로드
+                    </a>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center space-y-2">
+                    <FileText className="w-12 h-12 text-muted-foreground mx-auto" />
+                    <p className="font-semibold text-foreground">아직 동의서가 없어요</p>
+                    <p className="text-sm text-muted-foreground">선생님이 곧 올려주실 거예요!</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
         <div className="flex justify-around max-w-lg mx-auto">
-          {tabs.map((tab) => {
+          {mainTabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center py-3 px-2 min-w-0 transition-colors ${
+                className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
@@ -360,8 +441,46 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
               </button>
             )
           })}
+          <button
+            onClick={() => setMoreOpen(true)}
+            className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
+              moreTabs.some(t => t.id === activeTab) ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <Menu className="w-5 h-5 transition-transform" />
+            <span className="text-[11px] mt-1 font-medium">더보기</span>
+          </button>
         </div>
       </div>
+
+      {/* More Menu Sheet */}
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-8">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-left">메뉴</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-3 gap-3">
+            {moreTabs.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); setMoreOpen(false) }}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors ${
+                    isActive
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-muted/30 text-muted-foreground'
+                  }`}
+                >
+                  <Icon className="w-6 h-6" />
+                  <span className="text-xs font-semibold">{tab.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

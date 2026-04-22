@@ -11,6 +11,7 @@ export interface Mission {
   id: string;
   title: string;
   description: string;
+  location?: string;
   completed: boolean;
   completedBy: string[];
   classNames: string[];
@@ -54,6 +55,13 @@ export interface PrepItem {
 export interface PrepGuide {
   items: PrepItem[];
   cautions: PrepItem[];
+}
+
+export interface MeetingPoint {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
 }
 
 export interface AppState {

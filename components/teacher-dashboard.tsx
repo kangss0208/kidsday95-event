@@ -20,7 +20,10 @@ import {
   MessageSquare,
   Backpack,
   Settings,
+  MapPin,
+  Menu,
 } from "lucide-react"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import type { Child, ClassInfo, Mission } from "@/lib/types"
 import {
   getChildren,
@@ -51,6 +54,7 @@ interface TeacherDashboardProps {
 
 export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('children')
+  const [moreOpen, setMoreOpen] = useState(false)
   const [children, setChildren] = useState<Child[]>([])
   const [classes, setClasses] = useState<ClassInfo[]>([])
   const [missions, setMissions] = useState<Mission[]>([])
@@ -58,6 +62,7 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
   const [expandedChild, setExpandedChild] = useState<string | null>(null)
   const [newMissionTitle, setNewMissionTitle] = useState('')
   const [newMissionDesc, setNewMissionDesc] = useState('')
+  const [newMissionLocation, setNewMissionLocation] = useState('')
   const [newMissionClasses, setNewMissionClasses] = useState<string[]>([])
 
   useEffect(() => {
@@ -110,14 +115,17 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
       const updated = await createMission({
         title: newMissionTitle.trim(),
         description: newMissionDesc.trim() || '미션을 완료해주세요!',
+        location: newMissionLocation.trim() || undefined,
         classNames: newMissionClasses,
       })
       setMissions(updated)
       setNewMissionTitle('')
       setNewMissionDesc('')
+      setNewMissionLocation('')
       setNewMissionClasses([])
     } catch (err) {
       console.error('Failed to add mission', err)
+      alert('미션 추가에 실패했습니다. 다시 시도해주세요.')
     }
   }
 
@@ -150,13 +158,16 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
     return { completed, total: applicable.length }
   }
 
-  const tabs: { key: Tab; label: string; Icon: typeof Users }[] = [
-    { key: 'children', label: `어린이 (${children.length})`, Icon: Users },
-    { key: 'missions', label: `미션 (${missions.length})`, Icon: ListTodo },
-    { key: 'applications', label: '신청서', Icon: FileText },
+  const mainTabs: { key: Tab; label: string; Icon: typeof Users }[] = [
+    { key: 'children', label: '어린이', Icon: Users },
+    { key: 'missions', label: '미션', Icon: ListTodo },
     { key: 'bulletin', label: '게시판', Icon: MessageSquare },
-    { key: 'prep', label: '준비물', Icon: Backpack },
     { key: 'settings', label: '설정', Icon: Settings },
+  ]
+
+  const moreTabs: { key: Tab; label: string; Icon: typeof Users }[] = [
+    { key: 'applications', label: '신청서', Icon: FileText },
+    { key: 'prep', label: '준비물', Icon: Backpack },
   ]
 
   return (
@@ -179,29 +190,6 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
           >
             <LogOut className="w-5 h-5 text-muted-foreground" />
           </button>
-        </div>
-      </div>
-
-      {/* Tab Navigation (scrollable on overflow) */}
-      <div className="bg-card border-b border-border">
-        <div className="max-w-2xl mx-auto flex overflow-x-auto">
-          {tabs.map(({ key, label, Icon }) => {
-            const isActive = activeTab === key
-            return (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`shrink-0 px-4 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
-                  isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4 inline mr-1.5" />
-                {label}
-              </button>
-            )
-          })}
         </div>
       </div>
 
@@ -335,6 +323,12 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                   onChange={(e) => setNewMissionDesc(e.target.value)}
                   className="rounded-xl"
                 />
+                <Input
+                  placeholder="장소 이동 주소 (선택) — 예: 서울역 10번 출구"
+                  value={newMissionLocation}
+                  onChange={(e) => setNewMissionLocation(e.target.value)}
+                  className="rounded-xl"
+                />
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">적용 반 (하나 이상 선택)</p>
                   <div className="flex flex-wrap gap-2">
@@ -399,6 +393,12 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
                               </span>
                             ))}
                           </div>
+                          {mission.location && (
+                            <div className="flex items-center gap-1 mt-1.5">
+                              <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                              <p className="text-xs text-muted-foreground">{mission.location}</p>
+                            </div>
+                          )}
                           <p className="text-xs text-primary mt-2">
                             {completedCount}명 완료
                           </p>
@@ -432,6 +432,64 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
 
         {activeTab === 'settings' && <EventDateSettings />}
       </div>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div className="flex justify-around max-w-2xl mx-auto">
+          {mainTabs.map(({ key, label, Icon }) => {
+            const isActive = activeTab === key
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
+                  isActive ? 'text-primary' : 'text-muted-foreground'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                <span className="text-[11px] mt-1 font-medium whitespace-nowrap">{label}</span>
+              </button>
+            )
+          })}
+          <button
+            onClick={() => setMoreOpen(true)}
+            className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
+              moreTabs.some(t => t.key === activeTab) ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <Menu className="w-5 h-5 transition-transform" />
+            <span className="text-[11px] mt-1 font-medium">더보기</span>
+          </button>
+        </div>
+      </div>
+
+      {/* More Menu Sheet */}
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-8">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-left">메뉴</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-3 gap-3">
+            {moreTabs.map(({ key, label, Icon }) => {
+              const isActive = activeTab === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => { setActiveTab(key); setMoreOpen(false) }}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors ${
+                    isActive
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-muted/30 text-muted-foreground'
+                  }`}
+                >
+                  <Icon className="w-6 h-6" />
+                  <span className="text-xs font-semibold">{label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
