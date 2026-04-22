@@ -16,9 +16,32 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://v0-kidsday95-event.vercel.app'),
   title: '95들의 어린이날',
   description: '제1회 뮤우어린이집 현장학습',
   generator: 'v0.app',
+  openGraph: {
+    title: '95들의 어린이날',
+    description: '제1회 뮤우어린이집 현장학습',
+    url: 'https://v0-kidsday95-event.vercel.app',
+    siteName: '95들의 어린이날',
+    type: 'website',
+    locale: 'ko_KR',
+    images: [
+      {
+        url: '/kakao_share.png',
+        width: 1200,
+        height: 630,
+        alt: '95들의 어린이날 - 제1회 뮤우어린이집 현장학습',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '95들의 어린이날',
+    description: '제1회 뮤우어린이집 현장학습',
+    images: ['/kakao_share.png'],
+  },
   icons: {
     icon: [
       { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },

@@ -27,6 +27,7 @@ import {
   TEACHER_PASSWORDS,
 } from "@/lib/store"
 import type { Child, ClassInfo } from "@/lib/types"
+import { HeartPink, HeartBlue } from "@/components/heart-icons"
 
 export type LoginRole = 'child' | 'teacher' | 'admin'
 
@@ -161,8 +162,10 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
         )}
 
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            🩷어린이 여러분🩵
+          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
+            <HeartPink size={28} />
+            어린이 여러분
+            <HeartBlue size={28} />
           </h1>
           <p className="text-muted-foreground">선생님 메뉴에 들어가면 안돼요</p>
         </div>
