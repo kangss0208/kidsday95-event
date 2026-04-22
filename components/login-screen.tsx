@@ -167,7 +167,7 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
             어린이 여러분
             <HeartBlue size={28} />
           </h1>
-          <p className="text-muted-foreground">선생님 메뉴에 들어가면 안돼요</p>
+          <p className="text-muted-foreground">어른이 메뉴에 들어가면 안돼요</p>
         </div>
 
         <div className="w-full max-w-sm space-y-4">
