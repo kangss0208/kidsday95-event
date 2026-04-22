@@ -230,10 +230,6 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
           <span>돌아가기</span>
         </button>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">어른이</h1>
-          <p className="text-muted-foreground">어떤 역할이신가요?</p>
-        </div>
 
         <div className="w-full max-w-sm space-y-4">
           {/* 선생님 카드 */}
@@ -456,8 +452,8 @@ export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted 
                       key={cls.name}
                       onClick={() => { setSelectedClass(cls.name); setError('') }}
                       className={`p-3 rounded-xl border-2 transition-all ${selectedClass === cls.name
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
                         }`}
                     >
                       <span className="text-sm font-medium">{cls.name}</span>

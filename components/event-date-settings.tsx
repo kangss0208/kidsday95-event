@@ -188,7 +188,11 @@ export function EventDateSettings() {
           console.log('[picker] SDK script onload')
           w.kakao.maps.load(initMap)
         }
-        script.onerror = (e) => console.error('[picker] SDK script failed to load', e)
+        script.onerror = (e) =>
+          console.warn(
+            '[picker] SDK script failed to load. Check that the current domain is registered in Kakao Developers console.',
+            e
+          )
         document.head.appendChild(script)
       }
     }
@@ -249,11 +253,25 @@ export function EventDateSettings() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 min-w-0 space-y-1">
               <label className="text-xs font-medium text-muted-foreground">날짜</label>
-              <Input type="date" value={dateInput} onChange={(e) => { setDateInput(e.target.value); setSaveMessage('') }} className="rounded-xl h-12 w-full" />
+              <Input
+                type="date"
+                value={dateInput}
+                onChange={(e) => { setDateInput(e.target.value); setSaveMessage('') }}
+                onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                onFocus={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                className="rounded-xl h-12 w-full cursor-pointer"
+              />
             </div>
             <div className="flex-1 min-w-0 space-y-1">
               <label className="text-xs font-medium text-muted-foreground">시간</label>
-              <Input type="time" value={timeInput} onChange={(e) => { setTimeInput(e.target.value); setSaveMessage('') }} className="rounded-xl h-12 w-full" />
+              <Input
+                type="time"
+                value={timeInput}
+                onChange={(e) => { setTimeInput(e.target.value); setSaveMessage('') }}
+                onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                onFocus={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                className="rounded-xl h-12 w-full cursor-pointer"
+              />
             </div>
           </div>
 

@@ -19,7 +19,7 @@ import {
   Menu,
 } from "lucide-react"
 import type { Child, Mission, ClassInfo } from "@/lib/types"
-import { getMissions, getClasses, logout } from "@/lib/store"
+import { getMissions, getClasses, getChildren, logout } from "@/lib/store"
 import { getSupabase } from "@/lib/supabase/client"
 import { BulletinBoard } from "@/components/bulletin-board"
 import { PrepGuide } from "@/components/prep-guide"
@@ -38,15 +38,17 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
   const [moreOpen, setMoreOpen] = useState(false)
   const [missions, setMissions] = useState<Mission[]>([])
   const [classes, setClasses] = useState<ClassInfo[]>([])
+  const [children, setChildren] = useState<Child[]>([])
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       try {
-        const [m, c] = await Promise.all([getMissions(), getClasses()])
+        const [m, c, ch] = await Promise.all([getMissions(), getClasses(), getChildren()])
         if (!cancelled) {
           setMissions(m)
           setClasses(c)
+          setChildren(ch)
         }
       } catch (err) {
         console.error('Failed to load child dashboard data', err)
@@ -60,6 +62,7 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
       .channel('child-dashboard')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'missions' }, load)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'mission_completions' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'children' }, load)
       .subscribe()
 
     return () => {
@@ -106,7 +109,7 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={handleLogout}
             className="p-2 rounded-xl hover:bg-muted transition-colors"
           >
@@ -213,17 +216,33 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                   </div>
 
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">우리 반 친구들도 미션 중!</p>
-                    <div className="flex flex-wrap gap-2">
-                      {['미션 열심히!', '화이팅!', '함께해요!'].map((msg, i) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1 rounded-full bg-secondary/30 text-sm text-secondary-foreground"
-                        >
-                          {msg}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      우리 반 친구들 ({children.filter((c) => c.className === child.className).length}명)
+                    </p>
+                    {children.filter((c) => c.className === child.className).length === 0 ? (
+                      <p className="text-sm text-muted-foreground">아직 친구가 없어요</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {children
+                          .filter((c) => c.className === child.className)
+                          .map((c) => (
+                            <span
+                              key={c.id}
+                              className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5 ${
+                                c.id === child.id
+                                  ? 'bg-primary/20 text-primary font-semibold'
+                                  : 'bg-secondary/30 text-secondary-foreground'
+                              }`}
+                            >
+                              <span className="w-5 h-5 rounded-full bg-card flex items-center justify-center text-xs font-bold">
+                                {c.name[0]}
+                              </span>
+                              {c.name}
+                              {c.id === child.id && <span className="text-xs">(나)</span>}
+                            </span>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -287,11 +306,12 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                 return (
                   <Card
                     key={mission.id}
-                    className={`rounded-2xl border-2 transition-all ${
+                    className="rounded-2xl border-2 transition-all"
+                    style={
                       isCompleted
-                        ? 'border-primary/40 bg-primary/5'
-                        : 'border-border'
-                    }`}
+                        ? { borderColor: '#dbe8ff', backgroundColor: '#fff' }
+                        : undefined
+                    }
                   >
                     <CardContent className="p-4 flex items-start gap-3">
                       <div className="mt-0.5">
@@ -387,9 +407,8 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
-                }`}
+                className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
                 <span className="text-[11px] mt-1 font-medium whitespace-nowrap">{tab.label}</span>
@@ -398,9 +417,8 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
           })}
           <button
             onClick={() => setMoreOpen(true)}
-            className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${
-              moreTabs.some(t => t.id === activeTab) ? 'text-primary' : 'text-muted-foreground'
-            }`}
+            className={`flex flex-col items-center py-3 px-2 min-w-0 flex-1 transition-colors ${moreTabs.some(t => t.id === activeTab) ? 'text-primary' : 'text-muted-foreground'
+              }`}
           >
             <Menu className="w-5 h-5 transition-transform" />
             <span className="text-[11px] mt-1 font-medium">더보기</span>
@@ -422,11 +440,10 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setMoreOpen(false) }}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors ${
-                    isActive
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-muted/30 text-muted-foreground'
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-colors ${
+                    isActive ? 'text-primary font-semibold' : 'text-muted-foreground'
                   }`}
+                  style={{ borderColor: '#dbe8ff', backgroundColor: '#fff' }}
                 >
                   <Icon className="w-6 h-6" />
                   <span className="text-xs font-semibold">{tab.label}</span>

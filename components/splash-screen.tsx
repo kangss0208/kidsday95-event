@@ -22,9 +22,8 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-primary/20 via-background to-secondary/30 transition-opacity duration-500 ${
-        phase === 'fadeOut' ? 'opacity-0' : 'opacity-100'
-      }`}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-primary/20 via-background to-secondary/30 transition-opacity duration-500 ${phase === 'fadeOut' ? 'opacity-0' : 'opacity-100'
+        }`}
     >
       {/* Floating balloons */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -39,13 +38,12 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             }}
           >
             <div
-              className={`w-8 h-10 rounded-full ${
-                i % 3 === 0
-                  ? 'bg-primary/60'
-                  : i % 3 === 1
+              className={`w-8 h-10 rounded-full ${i % 3 === 0
+                ? 'bg-primary/60'
+                : i % 3 === 1
                   ? 'bg-secondary/80'
                   : 'bg-accent/70'
-              }`}
+                }`}
               style={{
                 borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
               }}
@@ -64,14 +62,20 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           <div className="absolute -bottom-2 -left-4 text-primary/60">
             <Sparkles className="w-6 h-6 animate-pulse" style={{ animationDelay: '0.5s' }} />
           </div>
-          
+
           <div className="bg-card rounded-3xl px-10 py-8 shadow-xl border-4 border-primary/30">
             <p className="text-muted-foreground text-base font-medium mb-2">
               제1회 뮤우어린이집 현장학습
             </p>
             <h1 className="text-4xl font-extrabold tracking-tight">
-              <span className="text-primary">95들과</span>
-              <span className="text-secondary-foreground ml-2">키링언니들</span>
+              <span className="text-primary" style={{ textShadow: '#adadad 1px 1px 1px' }}>95들</span>
+              <span className='text-3xl'>과</span>
+              <span
+                className="text-[rgb(219,_232,_255)] ml-2 max-[380px]:block max-[380px]:ml-0"
+                style={{ textShadow: '#adadad 1px 1px 1px' }}
+              >
+                키링언니들
+              </span>
             </h1>
           </div>
         </div>

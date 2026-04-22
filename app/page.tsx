@@ -164,9 +164,16 @@ export default function Home() {
             <Sparkles className="w-4 h-4 text-secondary-foreground" />
             <span className="text-sm font-medium text-muted-foreground">제1회 뮤우어린이집 현장학습</span>
           </div>
-          <h1 className="text-4xl font-extrabold">
-            <span className="text-primary">95들과</span>
-            <span className="text-foreground ml-2">키링언니들</span>
+
+          <h1 className="text-4xl font-extrabold tracking-tight">
+            <span className="text-primary" style={{ textShadow: '#adadad 1px 1px 1px' }}>95들</span>
+            <span className='text-3xl'>과</span>
+            <span
+              className="text-[rgb(219,_232,_255)] ml-2 max-[380px]:block max-[380px]:ml-0"
+              style={{ textShadow: '#adadad 1px 1px 1px' }}
+            >
+              키링언니들
+            </span>
           </h1>
           <p className="text-muted-foreground mt-2"></p>
         </div>
