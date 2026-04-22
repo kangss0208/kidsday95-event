@@ -1,43 +1,56 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Baby,
   GraduationCap,
+  ShieldCheck,
   ArrowLeft,
   Sparkles,
   User,
   Lock,
-  Clock
+  School,
+  Clock,
 } from "lucide-react"
 import {
   getChildren,
   saveChild,
   findChildByNameAndPassword,
   setCurrentChild,
-  setIsTeacher,
-  TEACHER_PASSWORD
+  setIsAdmin,
+  setTeacherClass,
+  getClasses,
+  ADMIN_PASSWORD,
+  TEACHER_COMMON_PASSWORD,
 } from "@/lib/store"
-import type { Child } from "@/lib/types"
+import type { Child, ClassInfo } from "@/lib/types"
 
-type LoginMode = 'select' | 'child-login' | 'child-register' | 'teacher'
+export type LoginRole = 'child' | 'teacher' | 'admin'
+
+type LoginMode = 'select' | 'child-login' | 'child-register' | 'teacher-select' | 'admin'
 
 interface LoginScreenProps {
-  onLoginSuccess: (isTeacher: boolean) => void
-  teacherOnly?: boolean
+  onLoginSuccess: (role: LoginRole) => void
+  adminOnly?: boolean
   isEventStarted?: boolean
   onBack?: () => void
 }
 
-export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarted = true, onBack }: LoginScreenProps) {
-  const [mode, setMode] = useState<LoginMode>(teacherOnly ? 'teacher' : 'select')
+export function LoginScreen({ onLoginSuccess, adminOnly = false, isEventStarted = true, onBack }: LoginScreenProps) {
+  const [mode, setMode] = useState<LoginMode>(adminOnly ? 'admin' : 'select')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
+  const [selectedClass, setSelectedClass] = useState('')
+  const [classes, setClasses] = useState<ClassInfo[]>([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    getClasses().then(setClasses).catch((err) => console.error('Failed to load classes', err))
+  }, [])
 
   const handleChildLogin = async () => {
     setError('')
@@ -45,13 +58,12 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
       setError('이름과 비밀번호를 입력해주세요')
       return
     }
-
     setBusy(true)
     try {
       const child = await findChildByNameAndPassword(name.trim(), password)
       if (child) {
         setCurrentChild(child)
-        onLoginSuccess(false)
+        onLoginSuccess('child')
       } else {
         setError('일치하는 정보가 없어요. 처음이라면 등록해주세요!')
       }
@@ -73,15 +85,13 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
       setError('비밀번호는 숫자 4자리로 입력해주세요')
       return
     }
-
     setBusy(true)
     try {
       const existingChildren = await getChildren()
-      if (existingChildren.some(c => c.name === name.trim() && c.password === password)) {
+      if (existingChildren.some((c) => c.name === name.trim() && c.password === password)) {
         setError('이미 등록된 이름과 비밀번호예요')
         return
       }
-
       const newChild: Child = {
         id: crypto.randomUUID(),
         name: name.trim(),
@@ -90,10 +100,9 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
         teacherName: '',
         createdAt: new Date().toISOString(),
       }
-
       await saveChild(newChild)
       setCurrentChild(newChild)
-      onLoginSuccess(false)
+      onLoginSuccess('child')
     } catch (err) {
       console.error(err)
       setError('등록 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.')
@@ -104,9 +113,23 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
 
   const handleTeacherLogin = () => {
     setError('')
-    if (password === TEACHER_PASSWORD) {
-      setIsTeacher(true)
-      onLoginSuccess(true)
+    if (!selectedClass) {
+      setError('반을 선택해주세요')
+      return
+    }
+    if (password !== TEACHER_COMMON_PASSWORD) {
+      setError('비밀번호가 틀렸어요')
+      return
+    }
+    setTeacherClass(selectedClass)
+    onLoginSuccess('teacher')
+  }
+
+  const handleAdminLogin = () => {
+    setError('')
+    if (password === ADMIN_PASSWORD) {
+      setIsAdmin(true)
+      onLoginSuccess('admin')
     } else {
       setError('비밀번호가 틀렸어요')
     }
@@ -115,6 +138,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
   const resetForm = () => {
     setName('')
     setPassword('')
+    setSelectedClass('')
     setError('')
   }
 
@@ -139,7 +163,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
         </div>
 
         <div className="w-full max-w-sm space-y-4">
-          {/* 어린이 카드 - 이벤트 전에는 기다려야해요 메시지 */}
+          {/* 어린이 카드 */}
           {!isEventStarted ? (
             <Card className="rounded-3xl border-2 border-primary/20 opacity-80">
               <CardContent className="p-6 flex items-center gap-4">
@@ -147,7 +171,6 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
                   <Clock className="w-8 h-8 text-primary" />
                 </div>
                 <div className="flex-1">
-                  {/* <h3 className="font-bold text-lg text-foreground">어린이</h3> */}
                   <p className="text-sm text-primary font-medium">조금만 기다려주세요!</p>
                   <p className="text-xs text-muted-foreground mt-1">95의 어린이날에 오픈되요</p>
                 </div>
@@ -171,9 +194,10 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
             </Card>
           )}
 
+          {/* 선생님 카드 */}
           <Card
             className="rounded-3xl border-2 border-secondary/30 cursor-pointer hover:border-secondary/50 hover:shadow-lg transition-all"
-            onClick={() => { resetForm(); setMode('teacher') }}
+            onClick={() => { resetForm(); setMode('teacher-select') }}
           >
             <CardContent className="p-6 flex items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-secondary/30 flex items-center justify-center">
@@ -181,7 +205,23 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg text-foreground">선생님</h3>
-                <p className="text-sm text-muted-foreground">어린이들을 관리해요</p>
+                <p className="text-sm text-muted-foreground">우리 반을 관리해요</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 관리자 카드 */}
+          <Card
+            className="rounded-3xl border-2 border-accent/40 cursor-pointer hover:border-accent/60 hover:shadow-lg transition-all"
+            onClick={() => { resetForm(); setMode('admin') }}
+          >
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-accent/40 flex items-center justify-center">
+                <ShieldCheck className="w-8 h-8 text-accent-foreground" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg text-foreground">관리자</h3>
+                <p className="text-sm text-muted-foreground">이벤트 전체를 관리해요</p>
               </div>
             </CardContent>
           </Card>
@@ -243,9 +283,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
                 />
               </div>
 
-              {error && (
-                <p className="text-destructive text-sm text-center">{error}</p>
-              )}
+              {error && <p className="text-destructive text-sm text-center">{error}</p>}
 
               <Button
                 onClick={handleChildLogin}
@@ -327,9 +365,7 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
                 반은 선생님이 배정해주실 거예요.
               </p>
 
-              {error && (
-                <p className="text-destructive text-sm text-center">{error}</p>
-              )}
+              {error && <p className="text-destructive text-sm text-center">{error}</p>}
 
               <Button
                 onClick={handleChildRegister}
@@ -345,11 +381,88 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
     )
   }
 
-  // Teacher login
+  if (mode === 'teacher-select') {
+    return (
+      <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-secondary/10 via-background to-primary/10">
+        <button
+          onClick={() => setMode('select')}
+          className="flex items-center gap-2 text-muted-foreground mb-6"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>돌아가기</span>
+        </button>
+
+        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 rounded-full bg-secondary/30 flex items-center justify-center mx-auto mb-4">
+              <GraduationCap className="w-10 h-10 text-secondary-foreground" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground">선생님 로그인</h2>
+            <p className="text-muted-foreground mt-1">반을 선택하고 비밀번호를 입력해주세요</p>
+          </div>
+
+          <Card className="rounded-3xl border-2 border-secondary/30">
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <School className="w-4 h-4" />
+                  담당 반
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {classes.map((cls) => (
+                    <button
+                      key={cls.name}
+                      onClick={() => { setSelectedClass(cls.name); setError('') }}
+                      className={`p-3 rounded-xl border-2 transition-all ${
+                        selectedClass === cls.name
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <span className="text-sm font-medium">{cls.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  비밀번호
+                </label>
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  placeholder="****"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="rounded-xl h-12 text-center text-2xl tracking-widest"
+                />
+              </div>
+
+              {error && <p className="text-destructive text-sm text-center">{error}</p>}
+
+              <Button
+                onClick={handleTeacherLogin}
+                disabled={!selectedClass || !password}
+                className="w-full h-12 rounded-xl text-lg font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              >
+                로그인
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // admin
   return (
     <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-secondary/10 via-background to-primary/10">
       <button
-        onClick={() => setMode('select')}
+        onClick={() => (adminOnly && onBack ? onBack() : setMode('select'))}
         className="flex items-center gap-2 text-muted-foreground mb-6"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -358,14 +471,14 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
 
       <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-secondary/30 flex items-center justify-center mx-auto mb-4">
-            <GraduationCap className="w-10 h-10 text-secondary-foreground" />
+          <div className="w-20 h-20 rounded-full bg-accent/40 flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck className="w-10 h-10 text-accent-foreground" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">선생님 로그인</h2>
-          <p className="text-muted-foreground mt-1">비밀번호를 입력해주세요</p>
+          <h2 className="text-2xl font-bold text-foreground">관리자 로그인</h2>
+          <p className="text-muted-foreground mt-1">관리자 비밀번호를 입력해주세요</p>
         </div>
 
-        <Card className="rounded-3xl border-2 border-secondary/30">
+        <Card className="rounded-3xl border-2 border-accent/40">
           <CardContent className="p-6 space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground flex items-center gap-2">
@@ -384,13 +497,11 @@ export function LoginScreen({ onLoginSuccess, teacherOnly = false, isEventStarte
               />
             </div>
 
-            {error && (
-              <p className="text-destructive text-sm text-center">{error}</p>
-            )}
+            {error && <p className="text-destructive text-sm text-center">{error}</p>}
 
             <Button
-              onClick={handleTeacherLogin}
-              className="w-full h-12 rounded-xl text-lg font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              onClick={handleAdminLogin}
+              className="w-full h-12 rounded-xl text-lg font-semibold"
             >
               로그인
             </Button>

@@ -16,7 +16,8 @@ import type {
 
 const STORAGE_KEYS = {
   CURRENT_CHILD: 'carat9559_current_child',
-  IS_TEACHER: 'carat9559_is_teacher',
+  IS_ADMIN: 'carat9559_is_teacher', // 키 이름은 레거시와 호환되게 유지
+  TEACHER_CLASS: 'carat9559_teacher_class',
 };
 
 function getItem<T>(key: string, defaultValue: T): T {
@@ -41,18 +42,26 @@ export function getCurrentChild(): Child | null {
 export function setCurrentChild(child: Child | null): void {
   setItem(STORAGE_KEYS.CURRENT_CHILD, child);
 }
-export function getIsTeacher(): boolean {
-  return getItem<boolean>(STORAGE_KEYS.IS_TEACHER, false);
+export function getIsAdmin(): boolean {
+  return getItem<boolean>(STORAGE_KEYS.IS_ADMIN, false);
 }
-export function setIsTeacher(isTeacher: boolean): void {
-  setItem(STORAGE_KEYS.IS_TEACHER, isTeacher);
+export function setIsAdmin(isAdmin: boolean): void {
+  setItem(STORAGE_KEYS.IS_ADMIN, isAdmin);
+}
+export function getTeacherClass(): string | null {
+  return getItem<string | null>(STORAGE_KEYS.TEACHER_CLASS, null);
+}
+export function setTeacherClass(className: string | null): void {
+  setItem(STORAGE_KEYS.TEACHER_CLASS, className);
 }
 export function logout(): void {
   setCurrentChild(null);
-  setIsTeacher(false);
+  setIsAdmin(false);
+  setTeacherClass(null);
 }
 
-export const TEACHER_PASSWORD = '9559';
+export const ADMIN_PASSWORD = '9559';
+export const TEACHER_COMMON_PASSWORD = '0001';
 const DEFAULT_EVENT_DATE_ISO = '2026-05-05T10:00:00';
 
 // ─── Row → domain mappers ─────────────────────────────────────

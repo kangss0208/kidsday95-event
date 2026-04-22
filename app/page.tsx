@@ -4,25 +4,27 @@ import { useState, useEffect, useCallback } from 'react';
 import { SplashScreen } from '@/components/splash-screen';
 import { CountdownTimer } from '@/components/countdown-timer';
 import { TeacherIntro } from '@/components/teacher-intro';
-import { LoginScreen } from '@/components/login-screen';
+import { LoginScreen, type LoginRole } from '@/components/login-screen';
 import { ChildDashboard } from '@/components/child-dashboard';
 import { TeacherDashboard } from '@/components/teacher-dashboard';
+import { AdminDashboard } from '@/components/admin-dashboard';
 import { Button } from '@/components/ui/button';
-import { getCurrentChild, getIsTeacher, getEventDate } from '@/lib/store';
+import { getCurrentChild, getIsAdmin, getTeacherClass, getEventDate } from '@/lib/store';
 import { Users, Sparkles } from 'lucide-react';
 import type { Child } from '@/lib/types';
 
 // Default fallback — actual value is loaded from store on mount (see useEffect)
 const DEFAULT_EVENT_DATE = new Date('2026-04-20T10:00:00');
 
-type AppScreen = 'splash' | 'pre-event' | 'login' | 'teacher-login' | 'child-dashboard' | 'teacher-dashboard';
+type AppScreen = 'splash' | 'pre-event' | 'login' | 'admin-login' | 'child-dashboard' | 'teacher-dashboard' | 'admin-dashboard';
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('splash');
   const [screenStack, setScreenStack] = useState<AppScreen[]>([]);
   const [showTeacherIntro, setShowTeacherIntro] = useState(false);
   const [currentChild, setCurrentChildState] = useState<Child | null>(null);
-  const [isTeacher, setIsTeacherState] = useState(false);
+  const [isAdmin, setIsAdminState] = useState(false);
+  const [teacherClass, setTeacherClassState] = useState<string | null>(null);
   const [isEventStarted, setIsEventStarted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [eventDate, setEventDateState] = useState<Date>(DEFAULT_EVENT_DATE);
@@ -69,12 +71,15 @@ export default function Home() {
       }
 
       const child = getCurrentChild();
-      const teacher = getIsTeacher();
+      const admin = getIsAdmin();
+      const tClass = getTeacherClass();
       if (cancelled) return;
       if (child) {
         setCurrentChildState(child);
-      } else if (teacher) {
-        setIsTeacherState(true);
+      } else if (tClass) {
+        setTeacherClassState(tClass);
+      } else if (admin) {
+        setIsAdminState(true);
       }
       setIsLoaded(true);
     })();
@@ -85,14 +90,18 @@ export default function Home() {
 
   const handleSplashComplete = useCallback(() => {
     const child = getCurrentChild();
-    const teacher = getIsTeacher();
+    const admin = getIsAdmin();
+    const tClass = getTeacherClass();
 
     if (child) {
       setCurrentChildState(child);
       navigateTo('child-dashboard');
-    } else if (teacher) {
-      setIsTeacherState(true);
+    } else if (tClass) {
+      setTeacherClassState(tClass);
       navigateTo('teacher-dashboard');
+    } else if (admin) {
+      setIsAdminState(true);
+      navigateTo('admin-dashboard');
     } else if (isEventStarted) {
       navigateTo('login');
     } else {
@@ -104,22 +113,27 @@ export default function Home() {
     setIsEventStarted(true);
   }, []);
 
-  const handleLoginSuccess = (isTeacherLogin: boolean) => {
-    if (isTeacherLogin) {
-      setIsTeacherState(true);
-      navigateTo('teacher-dashboard'); // replace: 대시보드에서 스와이프백으로 로그아웃 방지
+  const handleLoginSuccess = (role: LoginRole) => {
+    if (role === 'admin') {
+      setIsAdminState(true);
+      navigateTo('admin-dashboard');
+    } else if (role === 'teacher') {
+      const tClass = getTeacherClass();
+      setTeacherClassState(tClass);
+      navigateTo('teacher-dashboard');
     } else {
       const child = getCurrentChild();
       if (child) {
         setCurrentChildState(child);
-        navigateTo('child-dashboard'); // replace
+        navigateTo('child-dashboard');
       }
     }
   };
 
   const handleLogout = () => {
     setCurrentChildState(null);
-    setIsTeacherState(false);
+    setIsAdminState(false);
+    setTeacherClassState(null);
     if (isEventStarted) {
       navigateTo('login');
     } else {
@@ -196,9 +210,9 @@ export default function Home() {
     );
   }
 
-  // Teacher-only login screen (before event)
-  if (currentScreen === 'teacher-login') {
-    return <LoginScreen onLoginSuccess={handleLoginSuccess} teacherOnly onBack={() => navigateTo('pre-event')} />;
+  // Admin-only login screen (before event, backstage access)
+  if (currentScreen === 'admin-login') {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} adminOnly onBack={() => navigateTo('pre-event')} />;
   }
 
   // Child dashboard
@@ -206,9 +220,14 @@ export default function Home() {
     return <ChildDashboard child={currentChild} onLogout={handleLogout} />;
   }
 
-  // Teacher dashboard
-  if (currentScreen === 'teacher-dashboard' && isTeacher) {
-    return <TeacherDashboard onLogout={handleLogout} />;
+  // Teacher dashboard (class-scoped)
+  if (currentScreen === 'teacher-dashboard' && teacherClass) {
+    return <TeacherDashboard teacherClass={teacherClass} onLogout={handleLogout} />;
+  }
+
+  // Admin dashboard (full access)
+  if (currentScreen === 'admin-dashboard' && isAdmin) {
+    return <AdminDashboard onLogout={handleLogout} />;
   }
 
   // Fallback - should not happen

@@ -93,7 +93,7 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-secondary/10 pb-24">
       {/* Header */}
-      <div className="bg-card border-b border-border p-4">
+      <div className="sticky top-0 z-10 bg-card border-b border-border p-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -378,8 +378,8 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-        <div className="flex justify-around max-w-lg mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-10 bg-card border-t border-border pb-[max(env(safe-area-inset-bottom),0.5rem)]">
+        <div className="flex justify-around max-w-lg mx-auto px-2">
           {mainTabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -410,11 +410,11 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
 
       {/* More Menu Sheet */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl pb-8">
+        <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-8">
           <SheetHeader className="mb-4">
             <SheetTitle className="text-left">메뉴</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 px-2">
             {moreTabs.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
