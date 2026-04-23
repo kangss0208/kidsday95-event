@@ -84,7 +84,7 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
   const mainTabs = [
     { id: 'info' as Tab, label: '내 정보', icon: User },
     { id: 'missions' as Tab, label: '미션', icon: ListTodo },
-    { id: 'bulletin' as Tab, label: '게시판', icon: MessageSquare },
+    { id: 'bulletin' as Tab, label: '우리들의 기록', icon: MessageSquare },
     { id: 'location' as Tab, label: '만나는 곳', icon: MapPin },
   ]
 
@@ -99,8 +99,11 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
       <div className="sticky top-0 z-10 bg-card border-b border-border p-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-xl font-bold text-primary">{child.name[0]}</span>
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center ring-1 ring-[#FFA500]"
+              style={{ backgroundColor: '#C5D4E8', border: '2px solid #F7CAC9' }}
+            >
+              <span className="text-xl font-bold" style={{ color: '#4A6699' }}>{child.name[0]}</span>
             </div>
             <div>
               <h1 className="font-bold text-foreground">{child.name}</h1>
@@ -135,10 +138,13 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
         )}
         {activeTab === 'info' && (
           <div className="space-y-4">
-            <Card className="rounded-3xl border-2 border-primary/20 overflow-hidden">
+            <Card className="rounded-3xl border-0 overflow-hidden ring-2 ring-primary/20">
               <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-6 text-center">
-                <div className="w-24 h-24 rounded-full bg-card mx-auto mb-4 flex items-center justify-center shadow-lg">
-                  <span className="text-4xl font-bold text-primary">{child.name[0]}</span>
+                <div
+                  className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg ring-1 ring-[#FFA500]"
+                  style={{ backgroundColor: '#C5D4E8', border: '2px solid #F7CAC9' }}
+                >
+                  <span className="text-4xl font-bold" style={{ color: '#4A6699' }}>{child.name[0]}</span>
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">{child.name}</h2>
                 <div className="flex items-center justify-center gap-1 mt-2">

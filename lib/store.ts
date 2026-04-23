@@ -89,6 +89,7 @@ type ChildRow = {
   class_name: string;
   teacher_name: string;
   created_at: string;
+  is_absent: boolean | null;
 };
 const childFromRow = (r: ChildRow): Child => ({
   id: r.id,
@@ -97,6 +98,7 @@ const childFromRow = (r: ChildRow): Child => ({
   className: r.class_name,
   teacherName: r.teacher_name,
   createdAt: r.created_at,
+  isAbsent: r.is_absent ?? false,
 });
 
 type ClassRow = {
@@ -169,11 +171,20 @@ export async function saveChild(child: Child): Promise<void> {
     password: child.password,
     class_name: child.className,
     teacher_name: child.teacherName,
+    is_absent: child.isAbsent ?? false,
   };
   // upsert by id; if id is empty Supabase will generate one
   const { error } = await getSupabase()
     .from('children')
     .upsert(row, { onConflict: 'id' });
+  if (error) throw error;
+}
+
+export async function setChildAbsent(childId: string, isAbsent: boolean): Promise<void> {
+  const { error } = await getSupabase()
+    .from('children')
+    .update({ is_absent: isAbsent })
+    .eq('id', childId);
   if (error) throw error;
 }
 

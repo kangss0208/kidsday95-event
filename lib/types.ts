@@ -5,6 +5,7 @@ export interface Child {
   className: string;
   teacherName: string;
   createdAt: string;
+  isAbsent?: boolean;
 }
 
 export interface Mission {

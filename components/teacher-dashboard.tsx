@@ -28,6 +28,7 @@ import {
   deleteMission,
   toggleMissionForChild,
   pickMeetingPointForChild,
+  setChildAbsent,
   logout,
 } from "@/lib/store"
 import { getSupabase } from "@/lib/supabase/client"
@@ -140,7 +141,7 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
 
   const mainTabs: { key: MainTab; label: string; Icon: typeof Users }[] = [
     { key: 'class', label: '우리반', Icon: Users },
-    { key: 'bulletin', label: '게시판', Icon: MessageSquare },
+    { key: 'bulletin', label: '우리들의 기록', Icon: MessageSquare },
     { key: 'prep', label: '준비물', Icon: Backpack },
   ]
 
@@ -211,17 +212,25 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
                       const isExpanded = expandedChild === child.id
                       const meetingPoint = pickMeetingPointForChild(child.id, meetingPoints)
                       return (
-                        <Card key={child.id} className="rounded-2xl border-2 border-border overflow-hidden">
+                        <Card key={child.id} className={`rounded-2xl border-2 border-border overflow-hidden ${child.isAbsent ? 'opacity-50' : ''}`}>
                           <CardContent className="p-0">
                             <button
                               onClick={() => setExpandedChild(isExpanded ? null : child.id)}
                               className="w-full p-4 flex items-center gap-3 text-left"
                             >
-                              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                                <span className="text-lg font-bold text-primary">{child.name[0]}</span>
+                              <div
+                                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ring-1 ring-[#FFA500]"
+                                style={{ backgroundColor: '#C5D4E8', border: '2px solid #F7CAC9' }}
+                              >
+                                <span className="text-lg font-bold" style={{ color: '#4A6699' }}>{child.name[0]}</span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-foreground truncate">{child.name}</h3>
+                                <h3 className="font-semibold text-foreground truncate flex items-center gap-2">
+                                  {child.name}
+                                  {child.isAbsent && (
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">결석</span>
+                                  )}
+                                </h3>
                                 <p className="text-sm text-muted-foreground">{child.className}</p>
                                 {meetingPoint && (
                                   <p className="text-xs text-muted-foreground truncate">
@@ -242,7 +251,24 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
                             </button>
 
                             {isExpanded && (
-                              <div className="px-4 pb-4 border-t border-border pt-4 space-y-2">
+                              <div className="px-4 pb-4 border-t border-border pt-4 space-y-3">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await setChildAbsent(child.id, !child.isAbsent)
+                                    } catch (err) {
+                                      console.error('Failed to toggle absent', err)
+                                    }
+                                  }}
+                                  className={`w-full px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                                    child.isAbsent
+                                      ? 'bg-muted text-muted-foreground'
+                                      : 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                                  }`}
+                                >
+                                  {child.isAbsent ? '출석으로 되돌리기' : '결석 처리'}
+                                </button>
+
                                 <p className="text-sm font-medium text-muted-foreground mb-2">미션 현황</p>
                                 {myMissions.length === 0 ? (
                                   <p className="text-sm text-muted-foreground">등록된 미션이 없어요</p>

@@ -16,9 +16,11 @@ create table if not exists children (
   password text not null,
   class_name text not null default '',
   teacher_name text not null default '',
+  is_absent boolean not null default false,
   created_at timestamptz not null default now()
 );
 create index if not exists children_name_password_idx on children (name, password);
+alter table children add column if not exists is_absent boolean not null default false;
 
 create table if not exists missions (
   id uuid primary key default gen_random_uuid(),

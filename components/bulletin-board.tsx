@@ -171,7 +171,7 @@ export function BulletinBoard({ authorId, authorName, authorRole }: BulletinBoar
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
           <MessageSquare className="w-6 h-6 text-primary" />
-          게시판
+          우리들의 기록
         </h2>
         {canPost && (
           <Button

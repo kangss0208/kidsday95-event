@@ -80,13 +80,14 @@ export default function RootLayout({
   return (
     <html lang="ko" className="bg-background">
       <head>
-        <link
-          rel="preload"
-          as="font"
-          type="font/ttf"
-          href="/font/NEXON_Maplestory/TTF/Maplestory%20Light.ttf"
-          crossOrigin="anonymous"
-        />
+        <link rel="preload" as="font" type="font/ttf" href="/font/NEXON_Maplestory/TTF/Maplestory%20Light.ttf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/ttf" href="/font/NEXON_Maplestory/TTF/Maplestory%20Bold.ttf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/ttf" href="/font/cildren/BMKkubulimTTF.ttf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/ttf" href="/font/cildren/Griun%EF%BC%BFSimsimche%EF%BC%8DRg.ttf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/ttf" href="/font/cildren/junwu.ttf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/ttf" href="/font/cildren/kim.ttf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/ttf" href="/font/cildren/YoonChildfundkoreaManSeh.ttf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/ttf" href="/font/cildren/YoonChildfundkoreaMinGuk.ttf" crossOrigin="anonymous" />
       </head>
       <body className={`${nunito.variable} ${nunitoSans.variable} font-sans antialiased`}>
         {children}
