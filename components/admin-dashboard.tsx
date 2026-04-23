@@ -246,10 +246,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           className="w-full p-4 flex items-center gap-3 text-left"
                         >
                           <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ring-1 ring-[#FFA500]"
-                            style={{ backgroundColor: '#C5D4E8', border: '2px solid #F7CAC9' }}
+                            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 "
+                            style={{ backgroundColor: '#dbe8ff', border: '2px solid #7a99cf' }}
                           >
-                            <span className="text-lg font-bold" style={{ color: '#4A6699' }}>{child.name[0]}</span>
+                            <span className="text-lg font-bold" style={{ color: '#7a99cf' }}>{child.name[0]}</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-foreground truncate flex items-center gap-2">

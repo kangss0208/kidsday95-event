@@ -100,10 +100,10 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center ring-1 ring-[#FFA500]"
-              style={{ backgroundColor: '#C5D4E8', border: '2px solid #F7CAC9' }}
+              className="w-12 h-12 rounded-full flex items-center justify-center "
+              style={{ backgroundColor: '#dbe8ff', border: '2px solid #7a99cf' }}
             >
-              <span className="text-xl font-bold" style={{ color: '#4A6699' }}>{child.name[0]}</span>
+              <span className="text-xl font-bold" style={{ color: '#7a99cf' }}>{child.name[0]}</span>
             </div>
             <div>
               <h1 className="font-bold text-foreground">{child.name}</h1>
@@ -141,10 +141,10 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
             <Card className="rounded-3xl border-0 overflow-hidden ring-2 ring-primary/20">
               <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-6 text-center">
                 <div
-                  className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg ring-1 ring-[#FFA500]"
-                  style={{ backgroundColor: '#C5D4E8', border: '2px solid #F7CAC9' }}
+                  className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg "
+                  style={{ backgroundColor: '#dbe8ff', border: '2px solid #7a99cf' }}
                 >
-                  <span className="text-4xl font-bold" style={{ color: '#4A6699' }}>{child.name[0]}</span>
+                  <span className="text-4xl font-bold" style={{ color: '#7a99cf' }}>{child.name[0]}</span>
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">{child.name}</h2>
                 <div className="flex items-center justify-center gap-1 mt-2">
