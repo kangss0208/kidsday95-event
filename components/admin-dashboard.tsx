@@ -238,7 +238,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   return (
                     <Card
                       key={child.id}
-                      className={`rounded-2xl border-2 border-border overflow-hidden ${child.isAbsent ? 'opacity-50' : ''}`}
+                      className={`rounded-2xl border-2 overflow-hidden ${child.isAbsent ? '' : 'border-border'}`}
+                      style={child.isAbsent ? { borderColor: '#7a99cf' } : undefined}
                     >
                       <CardContent className="p-0">
                         <button

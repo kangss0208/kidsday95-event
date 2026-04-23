@@ -212,7 +212,11 @@ export function TeacherDashboard({ teacherClass, onLogout }: TeacherDashboardPro
                       const isExpanded = expandedChild === child.id
                       const meetingPoint = pickMeetingPointForChild(child.id, meetingPoints)
                       return (
-                        <Card key={child.id} className={`rounded-2xl border-2 border-border overflow-hidden ${child.isAbsent ? 'opacity-50' : ''}`}>
+                        <Card
+                          key={child.id}
+                          className={`rounded-2xl border-2 overflow-hidden ${child.isAbsent ? '' : 'border-border'}`}
+                          style={child.isAbsent ? { borderColor: '#7a99cf' } : undefined}
+                        >
                           <CardContent className="p-0">
                             <button
                               onClick={() => setExpandedChild(isExpanded ? null : child.id)}
