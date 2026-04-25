@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react"
 import { MapPin } from "lucide-react"
 import { getMeetingPoints, pickMeetingPointForChild } from "@/lib/store"
 
+let kakaoScriptState: 'idle' | 'loading' | 'loaded' = 'idle'
+const kakaoReadyCallbacks: Array<() => void> = []
+
 const DEFAULT_LOCATION = {
   name: '서울역 10번 출구',
   lat: 37.55441,
@@ -24,6 +27,7 @@ export function LocationMap({ childId }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY
   const [location, setLocation] = useState(DEFAULT_LOCATION)
+  const [mapsLoaded, setMapsLoaded] = useState(false)
 
   // 아이 ID 해시로 집합 장소 고정 배정
   useEffect(() => {
@@ -41,55 +45,59 @@ export function LocationMap({ childId }: Props) {
     return () => { cancelled = true }
   }, [childId])
 
-  // 카카오맵 초기화 (location 변경 시 재초기화)
+  // 카카오맵 스크립트 로딩 (apiKey만 의존 — location 변경 시 재실행 없음)
   useEffect(() => {
-    if (!apiKey || !mapRef.current) return
+    if (!apiKey) return
+    if (window.kakao?.maps) { setMapsLoaded(true); return }
 
-    function initMap() {
-      if (!mapRef.current) return
-      const coords = new window.kakao.maps.LatLng(location.lat, location.lng)
-      const map = new window.kakao.maps.Map(mapRef.current, { center: coords, level: 3 })
-      const marker = new window.kakao.maps.Marker({ position: coords, map })
-      const infowindow = new window.kakao.maps.InfoWindow({
-        content: `<div style="padding:6px 10px;font-size:13px;font-weight:bold;">${location.name}</div>`,
-      })
-      infowindow.open(map, marker)
-    }
+    const onReady = () => window.kakao.maps.load(() => setMapsLoaded(true))
 
-    if (window.kakao?.maps) {
-      initMap()
-      return
-    }
+    if (kakaoScriptState === 'loaded') { onReady(); return }
+    if (kakaoScriptState === 'loading') { kakaoReadyCallbacks.push(onReady); return }
 
+    kakaoScriptState = 'loading'
     const script = document.createElement('script')
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`
     script.async = true
-    script.onload = () => window.kakao.maps.load(initMap)
+    script.onload = () => {
+      kakaoScriptState = 'loaded'
+      onReady()
+      kakaoReadyCallbacks.forEach(cb => cb())
+      kakaoReadyCallbacks.length = 0
+    }
+    script.onerror = () => {
+      kakaoScriptState = 'idle'
+      console.warn('Kakao Maps 로딩 실패')
+    }
     document.head.appendChild(script)
-  }, [apiKey, location])
+  }, [apiKey])
+
+  // 지도 초기화 (스크립트 준비 완료 후, location 변경 시 재초기화)
+  useEffect(() => {
+    if (!mapsLoaded || !mapRef.current) return
+    const coords = new window.kakao.maps.LatLng(location.lat, location.lng)
+    const map = new window.kakao.maps.Map(mapRef.current, { center: coords, level: 3 })
+    const marker = new window.kakao.maps.Marker({ position: coords, map })
+    const infowindow = new window.kakao.maps.InfoWindow({
+      content: `<div style="padding:6px 10px;font-size:13px;font-weight:bold;">${location.name}</div>`,
+    })
+    infowindow.open(map, marker)
+  }, [mapsLoaded, location])
 
   const openKakaoMap = () => {
     const appUrl = `kakaomap://look?p=${location.lat},${location.lng}`
     const webUrl = `https://map.kakao.com/link/map/${encodeURIComponent(location.name)},${location.lat},${location.lng}`
-    const iframe = document.createElement('iframe')
-    iframe.style.display = 'none'
-    iframe.src = appUrl
-    document.body.appendChild(iframe)
+    window.open(appUrl)
     const timer = setTimeout(() => { window.open(webUrl, '_blank') }, 1500)
     window.addEventListener('blur', () => clearTimeout(timer), { once: true })
-    setTimeout(() => document.body.removeChild(iframe), 2000)
   }
 
   const openNaverMap = () => {
     const appUrl = `nmap://place?lat=${location.lat}&lng=${location.lng}&name=${encodeURIComponent(location.name)}&appname=kr.co.caratEvent`
     const webUrl = `https://map.naver.com/p/search/${encodeURIComponent(location.name)}`
-    const iframe = document.createElement('iframe')
-    iframe.style.display = 'none'
-    iframe.src = appUrl
-    document.body.appendChild(iframe)
+    window.open(appUrl)
     const timer = setTimeout(() => { window.open(webUrl, '_blank') }, 1500)
     window.addEventListener('blur', () => clearTimeout(timer), { once: true })
-    setTimeout(() => document.body.removeChild(iframe), 2000)
   }
 
   const openGoogleMap = () => {

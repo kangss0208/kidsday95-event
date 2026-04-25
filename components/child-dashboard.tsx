@@ -231,22 +231,29 @@ export function ChildDashboard({ child, onLogout }: ChildDashboardProps) {
                       <div className="flex flex-wrap gap-2">
                         {children
                           .filter((c) => c.className === child.className)
-                          .map((c) => (
-                            <span
-                              key={c.id}
-                              className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5 ${
-                                c.id === child.id
-                                  ? 'bg-primary/20 text-primary font-semibold'
-                                  : 'bg-secondary/30 text-secondary-foreground'
-                              }`}
-                            >
-                              <span className="w-5 h-5 rounded-full bg-card flex items-center justify-center text-xs font-bold">
-                                {c.name[0]}
-                              </span>
-                              {c.name}
-                              {c.id === child.id && <span className="text-xs">(나)</span>}
-                            </span>
-                          ))}
+                          .map((c) => {
+                            const isMe = c.id === child.id
+                            const isAbsent = c.isAbsent
+                            const heartFill = isMe ? 'var(--primary)' : isAbsent ? '#7ec1b4' : '#7a99cf'
+                            return (
+                              <div
+                                key={c.id}
+                                className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5 ${isMe ? 'bg-primary/20 text-primary font-semibold' : ''}`}
+                                style={!isMe ? { backgroundColor: isAbsent ? 'color-mix(in oklab, #76bdaf 30%, transparent)' : 'color-mix(in oklab, #dbe8ff 68%, transparent)' } : undefined}
+                              >
+                                <span className="w-5 h-5 rounded-full bg-card flex items-center justify-center text-xs font-bold">
+                                  {c.name[0]}
+                                </span>
+                                {c.name}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                  <svg width="15" height="15" viewBox="0 0 24 24" style={{ fill: heartFill }}>
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                  </svg>
+                                  {isMe && <span className="text-xs">(나)</span>}
+                                </div>
+                              </div>
+                            )
+                          })}
                       </div>
                     )}
                   </div>
