@@ -10,6 +10,7 @@ import type {
   AuthorRole,
   PrepGuide,
   MeetingPoint,
+  GameScore,
 } from './types';
 
 // ─── Session (stays in localStorage — per-device) ─────────────
@@ -18,6 +19,7 @@ const STORAGE_KEYS = {
   CURRENT_CHILD: 'carat9559_current_child',
   IS_ADMIN: 'carat9559_is_teacher', // 키 이름은 레거시와 호환되게 유지
   TEACHER_CLASS: 'carat9559_teacher_class',
+  GAME_PLAYER_NAME: 'carat9559_game_player_name',
 };
 
 function getItem<T>(key: string, defaultValue: T): T {
@@ -58,6 +60,13 @@ export function logout(): void {
   setCurrentChild(null);
   setIsAdmin(false);
   setTeacherClass(null);
+}
+
+export function getGamePlayerName(): string | null {
+  return getItem<string | null>(STORAGE_KEYS.GAME_PLAYER_NAME, null);
+}
+export function setGamePlayerName(name: string): void {
+  setItem(STORAGE_KEYS.GAME_PLAYER_NAME, name);
 }
 
 export const ADMIN_PASSWORD = 'admin';
@@ -487,5 +496,47 @@ export async function saveMeetingPoints(points: MeetingPoint[]): Promise<void> {
     .from('app_settings')
     .upsert({ key: 'meeting_points', value: JSON.stringify(points), updated_at: new Date().toISOString() });
   if (error) throw error;
+}
+
+// ─── Game Scores ──────────────────────────────────────────
+
+function getLastMondayNoon(): Date {
+  const now = new Date();
+  const day = now.getDay(); // 0=일, 1=월~6=토
+  const daysSinceMonday = day === 0 ? 6 : day - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - daysSinceMonday);
+  monday.setHours(12, 0, 0, 0);
+  monday.setSeconds(0, 0);
+  if (now < monday) monday.setDate(monday.getDate() - 7);
+  return monday;
+}
+
+export async function saveGameScore(
+  playerName: string,
+  gameType: GameScore['game_type'],
+  score: number
+): Promise<void> {
+  const { error } = await getSupabase()
+    .from('game_scores')
+    .insert({ player_name: playerName, game_type: gameType, score });
+  if (error) throw error;
+}
+
+export async function getGameScores(
+  gameType: GameScore['game_type'],
+  limit = 10
+): Promise<GameScore[]> {
+  const since = getLastMondayNoon();
+  const ascending = gameType === 'reaction'; // 반응속도는 낮을수록 좋음
+  const { data, error } = await getSupabase()
+    .from('game_scores')
+    .select('*')
+    .eq('game_type', gameType)
+    .gte('created_at', since.toISOString())
+    .order('score', { ascending })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as GameScore[];
 }
 

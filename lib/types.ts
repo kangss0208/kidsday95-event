@@ -66,6 +66,14 @@ export interface MeetingPoint {
   lng: number;
 }
 
+export interface GameScore {
+  id: string;
+  player_name: string;
+  game_type: 'face_quiz' | 'dot_click' | 'reaction' | 'watermelon';
+  score: number;
+  created_at: string;
+}
+
 export interface AppState {
   currentChild: Child | null;
   isTeacher: boolean;

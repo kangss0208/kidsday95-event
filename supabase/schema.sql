@@ -143,6 +143,18 @@ drop policy if exists posts_delete on storage.objects;
 create policy posts_delete on storage.objects
   for delete using (bucket_id = 'posts');
 
+-- ── Game Scores ───────────────────────────────────────────
+create table if not exists game_scores (
+  id uuid primary key default gen_random_uuid(),
+  player_name text not null,
+  game_type text not null check (game_type in ('face_quiz', 'dot_click', 'reaction', 'watermelon')),
+  score integer not null,
+  created_at timestamptz not null default now()
+);
+alter table game_scores enable row level security;
+drop policy if exists open_all on game_scores;
+create policy open_all on game_scores for all using (true) with check (true);
+
 -- ── Realtime ──────────────────────────────────────────────
 -- 선생님이 미션 체크하면 어린이 화면도 즉시 갱신되도록
 -- supabase_realtime publication에 주요 테이블 추가

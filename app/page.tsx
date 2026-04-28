@@ -8,15 +8,16 @@ import { LoginScreen, type LoginRole } from '@/components/login-screen';
 import { ChildDashboard } from '@/components/child-dashboard';
 import { TeacherDashboard } from '@/components/teacher-dashboard';
 import { AdminDashboard } from '@/components/admin-dashboard';
+import { GamesHub } from '@/components/games/games-hub';
 import { Button } from '@/components/ui/button';
 import { getCurrentChild, getIsAdmin, getTeacherClass, getEventDate } from '@/lib/store';
-import { Users, Sparkles } from 'lucide-react';
+import { Users, Sparkles, Gamepad2 } from 'lucide-react';
 import type { Child } from '@/lib/types';
 
 // Default fallback — actual value is loaded from store on mount (see useEffect)
 const DEFAULT_EVENT_DATE = new Date('2026-04-20T10:00:00');
 
-type AppScreen = 'splash' | 'pre-event' | 'login' | 'admin-login' | 'child-dashboard' | 'teacher-dashboard' | 'admin-dashboard';
+type AppScreen = 'splash' | 'pre-event' | 'mini-games' | 'login' | 'admin-login' | 'child-dashboard' | 'teacher-dashboard' | 'admin-dashboard';
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('splash');
@@ -190,6 +191,17 @@ export default function Home() {
               {isEventStarted ? '입장하기' : '로그인하기'}
             </Button>
           </div>
+
+          {/* Mini Games button */}
+          <div className="mt-3 px-4">
+            <Button
+              variant="outline"
+              onClick={() => navigateTo('mini-games', true)}
+              className="w-full max-w-md mx-auto flex h-14 rounded-2xl text-lg font-semibold border-2 border-secondary/40 bg-secondary/10 hover:bg-secondary/20">
+              <Gamepad2 className="w-5 h-5 mr-2" />
+              미니 게임
+            </Button>
+          </div>
         </div>
 
         {/* Bottom Buttons */}
@@ -204,6 +216,11 @@ export default function Home() {
         </div>
       </div>
     );
+  }
+
+  // Mini games screen
+  if (currentScreen === 'mini-games') {
+    return <GamesHub onBack={() => navigateTo('pre-event')} />;
   }
 
   // Login screen
