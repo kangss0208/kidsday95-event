@@ -76,33 +76,33 @@ export function ReactionGame({ playerName, onBack }: ReactionGameProps) {
   useEffect(() => {
     if (phase === 'playing') startRound();
     return () => clearTimeout(timeoutRef.current!);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
   useEffect(() => {
     if (phase === 'result' && !savedScore) {
       setSavedScore(true);
-      saveGameScore(playerName, 'reaction', avgMs).catch(() => {});
+      saveGameScore(playerName, 'reaction', avgMs).catch(() => { });
     }
   }, [phase, savedScore, avgMs, playerName]);
 
   const bgColor =
     roundState === 'go' ? 'bg-green-400' :
-    roundState === 'early' ? 'bg-red-400' :
-    roundState === 'done' ? 'bg-blue-200' :
-    'bg-gray-200';
+      roundState === 'early' ? 'bg-red-400' :
+        roundState === 'done' ? 'bg-blue-200' :
+          'bg-gray-200';
 
   const message =
     roundState === 'waiting' ? '준비...' :
-    roundState === 'go' ? '지금!' :
-    roundState === 'early' ? `너무 빨라요! +${PENALTY_MS}ms` :
-    roundState === 'done' ? `${currentMs}ms` :
-    '';
+      roundState === 'go' ? '지금!' :
+        roundState === 'early' ? `너무 빨라요! +${PENALTY_MS}ms` :
+          roundState === 'done' ? `${currentMs}ms` :
+            '';
 
   const subMessage =
     roundState === 'waiting' ? '화면이 초록색으로 바뀌면 클릭!' :
-    roundState === 'early' || roundState === 'done' ? '화면을 탭하면 다음으로' :
-    '';
+      roundState === 'early' || roundState === 'done' ? '화면을 탭하면 다음으로' :
+        '';
 
   if (phase === 'result') {
     return (
@@ -169,8 +169,8 @@ export function ReactionGame({ playerName, onBack }: ReactionGameProps) {
         ))}
       </div>
 
-      <p className="text-5xl font-extrabold text-white drop-shadow">{message}</p>
-      {subMessage && <p className="text-white/80 text-sm">{subMessage}</p>}
+      <p className="text-5xl font-extrabold text-[#333] drop-shadow">{message}</p>
+      {subMessage && <p className="text-[#333] text-sm">{subMessage}</p>}
 
       {times.length > 0 && (
         <p className="absolute bottom-16 text-white/70 text-xs">
