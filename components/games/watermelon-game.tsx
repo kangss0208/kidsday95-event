@@ -30,7 +30,7 @@ function calcCanvasSize() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const w = vw <= 480 ? vw - 40 : Math.min(vw - 40, 440);
-  const h = vh - HUD_H - 8;
+  const h = vh - HUD_H - 38; // 8 기본 + 30 하단 여백
   return { w: Math.max(w, 260), h: Math.max(h, 400) };
 }
 
@@ -62,6 +62,7 @@ export function WatermelonGame({ playerName, onBack }: WatermelonGameProps) {
   // 현재 게임에서 사용 중인 canvas 크기 (matter.js 좌표계와 일치해야 함)
   const cwRef = useRef(340);
   const chRef = useRef(500);
+  const lastSpawnTimeRef = useRef(0);
 
   const preloadFaceImages = useCallback(async () => {
     const imgs = await Promise.all(
@@ -293,12 +294,16 @@ export function WatermelonGame({ playerName, onBack }: WatermelonGameProps) {
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (phase !== 'playing' || gameOverRef.current) return;
+    const now = Date.now();
+    if (now - lastSpawnTimeRef.current < 300) return; // touch 후 발화되는 synthetic click 무시
+    lastSpawnTimeRef.current = now;
     spawnFruit(getDropX(e.clientX, canvasRef.current!.getBoundingClientRect(), nextLevel), nextLevel);
   };
 
   const handleCanvasTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
     if (phase !== 'playing' || gameOverRef.current) return;
     e.preventDefault();
+    lastSpawnTimeRef.current = Date.now();
     spawnFruit(getDropX(e.touches[0].clientX, canvasRef.current!.getBoundingClientRect(), nextLevel), nextLevel);
   };
 
@@ -380,7 +385,7 @@ export function WatermelonGame({ playerName, onBack }: WatermelonGameProps) {
         </div>
 
         {/* 캔버스: 좌우 20px 패딩, 높이는 남은 공간 전체 */}
-        <div className="flex justify-center px-5 pb-2 flex-1">
+        <div className="flex justify-center px-5 pb-8 flex-1">
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}
