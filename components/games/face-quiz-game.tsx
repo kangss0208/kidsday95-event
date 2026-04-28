@@ -11,9 +11,9 @@ const POINTS_PER_CORRECT = 10;
 
 // 눈/코/입 영역: objectPosition + scale
 const CROP_AREAS = [
-  { label: '눈',  objectPosition: '50% 22%', scale: 2.6 },
-  { label: '코',  objectPosition: '50% 42%', scale: 2.4 },
-  { label: '입',  objectPosition: '50% 65%', scale: 2.4 },
+  { label: '눈', objectPosition: '50% 22%', scale: 2.6 },
+  { label: '코', objectPosition: '50% 42%', scale: 2.4 },
+  { label: '입', objectPosition: '50% 65%', scale: 2.4 },
 ];
 
 // DB 의존성 없이 이미지 파일명만으로 플레이어를 구성
@@ -95,7 +95,7 @@ export function FaceQuizGame({ playerName, onBack }: FaceQuizGameProps) {
       });
     }, 1000);
     return () => clearInterval(timerRef.current!);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, phase]);
 
   const handleAnswer = useCallback((memberId: string | null) => {
@@ -119,7 +119,7 @@ export function FaceQuizGame({ playerName, onBack }: FaceQuizGameProps) {
   useEffect(() => {
     if (phase === 'result' && !savedScore && questions.length > 0) {
       setSavedScore(true);
-      saveGameScore(playerName, 'face_quiz', score).catch(() => {});
+      saveGameScore(playerName, 'face_quiz', score).catch(() => { });
     }
   }, [phase, savedScore, score, playerName, questions.length]);
 
@@ -187,7 +187,7 @@ export function FaceQuizGame({ playerName, onBack }: FaceQuizGameProps) {
       {/* 얼굴 크롭 이미지 */}
       <div className="flex flex-col items-center px-4 py-3 gap-2">
         <p className="text-sm text-muted-foreground font-medium">
-          {q.crop.label} 부분을 보고 누군지 맞춰보세요!
+          부분을 보고 누군지 맞춰보세요!
         </p>
         <div
           className="w-52 h-52 rounded-3xl border-4 border-primary/30 overflow-hidden shadow-lg bg-muted"
